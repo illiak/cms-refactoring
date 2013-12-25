@@ -10,6 +10,9 @@ namespace MvcApplication1.Models
         private readonly TempDataDictionary _tempData;
         private readonly ControllerContext _controllerContext;
 
+        //just for testing
+        public MvcRequestContext() {}
+
         public MvcRequestContext(ControllerContext controllerContext, ViewDataDictionary viewData,
                                  TempDataDictionary tempData)
         {

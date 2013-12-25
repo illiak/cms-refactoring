@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Web;
@@ -12,7 +13,7 @@ using NUnit.Framework;
 
 namespace MvcApplication1.Tests
 {
-    [TestFixture]
+    [TestFixture, Category("Unit")]
     public class EngineTests
     {
         private readonly UnityContainer _container;
@@ -24,52 +25,34 @@ namespace MvcApplication1.Tests
         }
 
         [Test]
-        public void CanCreateAndPreviewPage()
+        public void CanCreateViewAndPreviewItsDraft()
         {
-            var page = CreateTestPage();
-            var pageData = page.GetData();
-
-            var mock = new Mock<MvcRequestContext>();
-            mock.Setup(x => x.HasCookie(It.Is<string>(p => p == CmsEngine.PreviewDraftCookieName)))
-                .Returns(true)
-                .Verifiable();
-            mock.Setup(x => x.RenderRazorViewToString(It.Is<string>(p => p == pageData.Filepath), It.IsAny<object>()))
+            var mockRequestContext = new Mock<MvcRequestContext>();
+            mockRequestContext.Setup(x => x.RenderRazorViewToString(It.Is<string>(p => File.Exists(p)), It.IsAny<object>()))
                 .Returns(new StringBuilder("some markup"))
                 .Verifiable();
-            _container.RegisterInstance(mock.Object);
+            _container.RegisterInstance(mockRequestContext.Object);
+
+            var mockApplicationContext = new Mock<MvcApplicationContext>();
+            mockApplicationContext.Setup(x => x.GetFileSystemPath(It.IsAny<string>()))
+                .Returns(Path.GetTempPath());
+            _container.RegisterInstance(mockApplicationContext.Object);
+
             _cmsEngine = _container.Resolve<CmsEngine>();
 
-            var response = _cmsEngine.ProcessRequest(pageData.Url, mock.Object);
+            var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
+            var url = string.Format("http://test.com/en-gb/{0}", RandomHelper.GetRandomString());
+
+            _cmsEngine.CreateView(markup, url, ViewStatus.Draft);
+
+            var response = _cmsEngine.ProcessRequest(
+                url: url, 
+                showDrafts: true, 
+                mvcRequestContext: mockRequestContext.Object
+            );
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.OK));
-            Assert.DoesNotThrow(mock.Verify);
-        }
-
-        Page CreateTestPage()
-        {
-            var name = RandomHelper.GetRandomString();
-            var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
-            var language = _cmsEngine.GetLanguages().First();
-            var url = string.Format("http://test.com/{0}", RandomHelper.GetRandomString());
-
-            return _cmsEngine.CreatePage(name, language, url, markup);
-        }
-    }
-
-    public class MockMvcRequestContext : MvcRequestContext
-    {
-        public MockMvcRequestContext() : base(null, null, null) { }
-
-        public string   RenderResult { get; set; }
-        public bool     HasCookieResult { get; set; }
-
-        public override bool HasCookie(string previewCookieName)
-        {
-            return HasCookieResult;
-        }
-        public override System.Text.StringBuilder RenderRazorViewToString(string viewFilePath, object model)
-        {
-            return new StringBuilder(RenderResult);
+            Assert.DoesNotThrow(mockRequestContext.Verify);
         }
     }
 }
