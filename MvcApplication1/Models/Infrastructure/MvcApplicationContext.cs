@@ -1,3 +1,5 @@
+using System.IO;
+using System.Text;
 using System.Web.Hosting;
 
 namespace MvcApplication1.Models
@@ -9,4 +11,6 @@ namespace MvcApplication1.Models
             return HostingEnvironment.MapPath(virtualPath);
         }
     }
+
+   
 }

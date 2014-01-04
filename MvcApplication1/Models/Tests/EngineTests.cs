@@ -27,32 +27,60 @@ namespace MvcApplication1.Tests
         [Test]
         public void CanCreateViewAndPreviewItsDraft()
         {
-            var mockRequestContext = new Mock<MvcRequestContext>();
-            mockRequestContext.Setup(x => x.RenderRazorViewToString(It.Is<string>(p => File.Exists(p)), It.IsAny<object>()))
-                .Returns(new StringBuilder("some markup"))
-                .Verifiable();
-            _container.RegisterInstance(mockRequestContext.Object);
-
-            var mockApplicationContext = new Mock<MvcApplicationContext>();
-            mockApplicationContext.Setup(x => x.GetFileSystemPath(It.IsAny<string>()))
-                .Returns(Path.GetTempPath());
-            _container.RegisterInstance(mockApplicationContext.Object);
+            var mockRequestContext = new MvcRequestContextMock();
+            _container.RegisterInstance<MvcRequestContext>(mockRequestContext);
+            _container.RegisterInstance<MvcApplicationContext>(new MvcApplicationContextMock());
 
             _cmsEngine = _container.Resolve<CmsEngine>();
 
             var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
-            var url = string.Format("http://test.com/en-gb/{0}", RandomHelper.GetRandomString());
+            var routePattern = string.Format("http://test.com/en-gb/{0}", RandomHelper.GetRandomString());
+            var name = "testPage-" + RandomHelper.GetRandomString();
 
-            _cmsEngine.CreateView(markup, url, ViewStatus.Draft);
+            var page = _cmsEngine.CreatePage(name, routePattern, markup);
+            page.Publish();
 
             var response = _cmsEngine.ProcessRequest(
-                url: url, 
-                showDrafts: true, 
-                mvcRequestContext: mockRequestContext.Object
+                routePattern, 
+                showDrafts: true,
+                mvcRequestContext: mockRequestContext
             );
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.OK));
-            Assert.DoesNotThrow(mockRequestContext.Verify);
         }
+
+        #region Mocks
+
+        class MvcRequestContextMock : MvcRequestContext
+        {
+            public override StringBuilder RenderRazorViewToString(string viewFilePath, object model)
+            {
+                var path = GetFileSystemTempPath(viewFilePath);
+                Assert.That(File.Exists(path));
+                
+                return new StringBuilder("some markup");
+            }
+        }
+
+        class MvcApplicationContextMock : MvcApplicationContext
+        {
+            public override string GetFileSystemPath(string virtualPath)
+            {
+                return GetFileSystemTempPath(virtualPath);
+            }
+        }
+
+        static string GetFileSystemTempPath(string virtualPath)
+        {
+            var result = new StringBuilder(virtualPath);
+            result.Replace("~/", Path.GetTempPath());
+            result.Replace("/", "\\");
+
+            return result.ToString();
+        }
+
+        #endregion
     }
+
+
 }

@@ -11,10 +11,9 @@ namespace MvcApplication1.Models
         private readonly ControllerContext _controllerContext;
 
         //just for testing
-        public MvcRequestContext() {}
+        protected MvcRequestContext() {}
 
-        public MvcRequestContext(ControllerContext controllerContext, ViewDataDictionary viewData,
-                                 TempDataDictionary tempData)
+        public MvcRequestContext(ControllerContext controllerContext, ViewDataDictionary viewData, TempDataDictionary tempData)
         {
             _controllerContext = controllerContext;
             _viewData = viewData;

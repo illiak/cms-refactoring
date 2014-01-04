@@ -144,11 +144,14 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Domain\CmsEngine.cs" />
+    <Compile Include="Models\Domain\Data\CreatePageData.cs" />
+    <Compile Include="Models\Domain\Data\PageData.cs" />
+    <Compile Include="Models\Infrastructure\ContentRepository.cs" />
     <Compile Include="Models\Domain\Language.cs" />
     <Compile Include="Models\Infrastructure\MvcApplicationContext.cs" />
     <Compile Include="Models\Infrastructure\UrlRouter.cs" />
     <Compile Include="Models\Infrastructure\MvcRequestContext.cs" />
-    <Compile Include="Models\Domain\View.cs" />
+    <Compile Include="Models\Domain\Page.cs" />
     <Compile Include="Models\Infrastructure\RandomHelper.cs" />
     <Compile Include="Models\Tests\EngineTestsIntegration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

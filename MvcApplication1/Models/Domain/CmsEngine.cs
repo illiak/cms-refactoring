@@ -12,19 +12,22 @@ namespace MvcApplication1.Models
     public class CmsEngine
     {
         private readonly MvcApplicationContext _mvcApplicationContext;
-        private readonly ViewDataRepository _viewDataRepository;
-        private readonly UrlRouter<View> _releaseUrlRouter;
-        private readonly UrlRouter<View> _draftUrlRouter;
+        private readonly ContentRepository _viewDataRepository;
+        private readonly PageFactory _pageFactory;
+        private readonly UrlRouter<Page> _releaseUrlRouter;
+        private readonly UrlRouter<Page> _draftUrlRouter;
 
         public const string PreviewDraftCookieName = "Preview";
 
         public CmsEngine(MvcApplicationContext mvcApplicationContext, 
-                         ViewDataRepository viewDataRepository)
+                         ContentRepository viewDataRepository,
+                         PageFactory pageFactory)
         {
             _mvcApplicationContext = mvcApplicationContext;
             _viewDataRepository = viewDataRepository;
-            _releaseUrlRouter = new UrlRouter<View>();
-            _draftUrlRouter = new UrlRouter<View>();
+            _pageFactory = pageFactory;
+            _releaseUrlRouter = new UrlRouter<Page>();
+            _draftUrlRouter = new UrlRouter<Page>();
         }
 
         public IEnumerable<Language>    GetLanguages()
@@ -32,56 +35,23 @@ namespace MvcApplication1.Models
             return new[] { new Language { Code = "en-gb", Name = "English" } };
         }
 
-        public View     CreateView(string markup, string routePattern, ViewStatus status)
+        public Page[]   CreatePages(CreatePageData[] data)
         {
-            const string viewsPath = "~/Views";
-
-            var draftsPath = Path.Combine(viewsPath, "/Draft");
-            var releasePath = Path.Combine(viewsPath, "/Release");
-
-            var routePath = GetPathFromRoutePattern(routePattern);
-            
-            var basePath = status == ViewStatus.Draft ? draftsPath : releasePath;
-
-            var viewVirtualPath = viewsPath + basePath + routePath + ".cshtml";
-            
-            var viewFilePath = _mvcApplicationContext.GetFileSystemPath(viewVirtualPath);
-            var fileInfo = new FileInfo(viewFilePath);
-
-            Directory.CreateDirectory(fileInfo.Directory.FullName);
-
-            using (var writer = new StreamWriter(fileInfo.FullName))
-            {
-                // It seems all view files created in Visual Studio will have BOM. So, we need it here too.
-                writer.Write('\xfeff');
-                writer.Write(markup);
-            }
-            
-            var view = new View(id: Guid.NewGuid(), virtualPath: viewVirtualPath, status: status, routePattern: routePattern);
-            _viewDataRepository.Views.Add(view.Data);
-
-            var urlRouter = status == ViewStatus.Draft ? _draftUrlRouter : _releaseUrlRouter;
-            urlRouter.RegisterRoute(routePattern, view);
-            return view;
+            return data.Select(CreatePage).ToArray();
+        }
+        public Page     CreatePage(string name, string routePattern, string markup)
+        {
+            return CreatePage(new CreatePageData { Markup = markup, RoutePattern = routePattern });
         }
 
-        private string GetPathFromRoutePattern(string routePattern)
+        private Page    CreatePage(CreatePageData createPageData)
         {
-            Uri result;
-            var routePatternIsValidUri = Uri.TryCreate(routePattern, UriKind.Absolute, out result);
-            if (!routePatternIsValidUri) 
-                throw new NotImplementedException("Route pattern is not valid Uri: scenario not implemented yet");
+            var page = _pageFactory.Create(createPageData);
 
-            return result.AbsolutePath;
-        }
+            var urlRouter = page.Data.Status == ContentStatus.Draft ? _draftUrlRouter : _releaseUrlRouter;
+            urlRouter.RegisterRoute(createPageData.RoutePattern, page);
 
-        public View     CreateView(CreateViewData data)
-        {
-            return CreateView(data.Markup, data.Url, data.Status);
-        }
-        public View[] CreateViews(CreateViewData[] data)
-        {
-            return data.Select(CreateView).ToArray();
+            return page;
         }
 
         public Response ProcessRequest(string url, bool showDrafts, MvcRequestContext mvcRequestContext)
@@ -99,7 +69,7 @@ namespace MvcApplication1.Models
 
             var pageHtmlBuilder = mvcRequestContext.RenderRazorViewToString(viewFilePath: page.Data.VirtualPath, model: new object());
             if (pageHtmlBuilder == null)
-                return new Response { Type = ResponseType.PageNotFound };
+                throw new ApplicationException(string.Format("Page was not found by the path specified: '{0}'", page.Data.VirtualPath));
 
             return new Response { Body = pageHtmlBuilder.ToString(), Type = ResponseType.OK };
         }
@@ -114,11 +84,4 @@ namespace MvcApplication1.Models
         public string       Body;
     }
 
-
-    public struct CreateViewData
-    {
-        public string       Url;
-        public string       Markup;
-        public ViewStatus   Status;
-    }
 }

@@ -13,7 +13,7 @@ namespace MvcApplication1.Controllers
     {
         private readonly CmsEngine _cmsEngine;
         private const string _adminFormsCookieName = "CmsAdminFormsAuth";
-        private const string _showDraftsCookieName = "ShowDrafts";
+        private const string _showDraftsCookieName = "CmsShowDrafts";
 
         public CmsController(CmsEngine cmsEngine)
         {
@@ -91,6 +91,7 @@ namespace MvcApplication1.Controllers
             var encryptedTicket = FormsAuthentication.Encrypt(ticket);
             var cookie = new HttpCookie(_adminFormsCookieName, encryptedTicket) { Secure = false };
             Response.Cookies.Add(cookie);
+            Response.Cookies.Add(new HttpCookie(_showDraftsCookieName, true.ToString()));
 
             return "Admin login simulated";
         }

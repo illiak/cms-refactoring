@@ -31,7 +31,11 @@ namespace MvcApplication1
             Container.RegisterType<CmsEngine>(new ContainerControlledLifetimeManager());
 
             var engine = Container.Resolve<CmsEngine>();
-            engine.CreateView("test page markup", "http://localhost:33586/en-gb/testPage", ViewStatus.Release);
+            engine.CreatePage(
+                name: "test page markup", 
+                routePattern: "http://localhost:33586/en-gb/testPage", 
+                markup: "test page markup goes here"
+            );
         }
 
         protected void Application_AuthenticateRequest(Object sender, EventArgs e)

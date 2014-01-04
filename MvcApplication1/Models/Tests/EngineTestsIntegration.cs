@@ -22,7 +22,7 @@ namespace MvcApplication1.Tests
         }
 
         [Test]
-        public void CanCreateViewAndPreviewItsDraft()
+        public void CanViewCreatedAndPublishedPage()
         {
             var host = AppHost.Simulate(@"\MvcApplication1");
             host.Start(browsingSession =>
@@ -31,9 +31,13 @@ namespace MvcApplication1.Tests
 
                 var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
                 //MvcIntegrationTestFramework works only with 127.0.0.1 address
-                var url = new Uri(string.Format("http://127.0.0.1/en-gb/{0}", RandomHelper.GetRandomString())); 
+                var url = string.Format("http://127.0.0.1/en-gb/{0}", RandomHelper.GetRandomString());
+                var name = "testPage" + RandomHelper.GetRandomString();
 
-                cmsEngine.CreateView(markup, url.ToString(), ViewStatus.Release);
+                var page = cmsEngine.CreatePage(name: name, routePattern: url.ToString(), markup: markup);
+                page.Publish();
+
+                browsingSession.Get("http://127.0.0.1/simulateAdminLogin");
 
                 var response = browsingSession.Get(url);
                 Assert.AreEqual(200, response.ResponseStatusCode);

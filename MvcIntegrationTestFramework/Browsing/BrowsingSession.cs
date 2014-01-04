@@ -46,6 +46,11 @@ namespace MvcIntegrationTestFramework.Browsing
             }
         }
 
+        public SerializableRequestResult Get(string url)
+        {
+            return Get(new Uri(url));
+        }
+
         public SerializableRequestResult Get(Uri url)
         {
             return ProcessRequest(url.AbsolutePath, HttpVerbs.Get, new NameValueCollection());
