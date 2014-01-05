@@ -1,6 +1,10 @@
+using System;
 using System.IO;
 using System.Text;
+using System.Web;
 using System.Web.Mvc;
+using System.Web.UI.WebControls;
+using Microsoft.Ajax.Utilities;
 
 namespace MvcApplication1.Models
 {
@@ -10,8 +14,8 @@ namespace MvcApplication1.Models
         private readonly TempDataDictionary _tempData;
         private readonly ControllerContext _controllerContext;
 
-        //just for testing
-        protected MvcRequestContext() {}
+        //required for creating mocks
+        protected MvcRequestContext() { }
 
         public MvcRequestContext(ControllerContext controllerContext, ViewDataDictionary viewData, TempDataDictionary tempData)
         {
@@ -20,28 +24,36 @@ namespace MvcApplication1.Models
             _tempData = tempData;
         }
 
-        public virtual StringBuilder RenderRazorViewToString(string viewFilePath, object model)
+        public virtual StringBuilder RenderPage(Page page, object model = null)
         {
             _viewData.Model = model;
-            using (var sw = new StringWriter())
+            using (var writer = new StringWriter())
             {
-                ViewEngineResult viewResult;
-
-                viewResult = ViewEngines.Engines.FindPartialView(_controllerContext, viewFilePath);
+                var viewResult = ViewEngines.Engines.FindPartialView(_controllerContext, page.Data.VirtualPath);
 
                 if (viewResult.View == null)
                     return null;
 
-                var viewContext = new ViewContext(_controllerContext, viewResult.View, _viewData, _tempData, sw);
-                viewResult.View.Render(viewContext, sw);
+                var viewContext = new ViewContext(_controllerContext, viewResult.View, _viewData, _tempData, writer);
+                viewResult.View.Render(viewContext, writer);
                 viewResult.ViewEngine.ReleaseView(_controllerContext, viewResult.View);
-                return sw.GetStringBuilder();
+                var result = writer.GetStringBuilder();
+                if (result == null)
+                    throw new ApplicationException(string.Format("Page file was not found by the path specified: '{0}'", page.Data.VirtualPath));
+                return result;
             }
         }
 
-        public virtual bool HasCookie(string previewCookieName)
+        public virtual bool HasCookie(string cookieName)
         {
-            throw new System.NotImplementedException();
+            return _controllerContext.HttpContext.Request.Cookies[cookieName] != null;
+        }
+
+        public virtual string GetCookieValue(string cookieName)
+        {
+            var cookie = _controllerContext.HttpContext.Request.Cookies[cookieName];
+            if (cookie == null) throw new ApplicationException(string.Format("Cookie named '{0}' was not found", cookieName));
+            return cookie.Value;
         }
     }
 }

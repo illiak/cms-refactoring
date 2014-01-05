@@ -12,90 +12,58 @@ namespace MvcApplication1.Controllers
     public class CmsController : Controller
     {
         private readonly CmsEngine _cmsEngine;
-        private const string _adminFormsCookieName = "CmsAdminFormsAuth";
-        private const string _showDraftsCookieName = "CmsShowDrafts";
+        private readonly MvcApplicationContext _mvcApplicationContext;
 
-        public CmsController(CmsEngine cmsEngine)
+        public CmsController(CmsEngine cmsEngine, MvcApplicationContext mvcApplicationContext)
         {
             _cmsEngine = cmsEngine;
+            _mvcApplicationContext = mvcApplicationContext;
         }
 
         [HttpGet]
         public ActionResult ProcessRequest()
         {
-            var showDrafts = CheckIfHasToShowDrafts();
-            if (showDrafts)
-            {
-                var isAdmin = CheckIfUserIsAdmin();
-                if (!isAdmin) return new HttpUnauthorizedResult("Only admins can view drafts");
-            }
-            
-            var response = _cmsEngine.ProcessRequest(Request.Url, showDrafts, new MvcRequestContext(ControllerContext, ViewData, TempData));
+            _mvcApplicationContext.SaveCurrentRequestContext(new MvcRequestContext(ControllerContext, ViewData, TempData));
+
+            var response = _cmsEngine.ProcessRequest(Request.Url);
             switch (response.Type)
             {
                 case ResponseType.OK:
                     return Content(response.Body);
                 case ResponseType.Redirect:
-                    throw new NotImplementedException();
+                    throw new NotImplementedException("Redirects are not implemented yet");
                 case ResponseType.PageNotFound:
                     return new HttpStatusCodeResult(HttpStatusCode.NotFound);
                 case ResponseType.Error:
                     return new HttpStatusCodeResult(HttpStatusCode.InternalServerError);
+                case ResponseType.Unauthorized:
+                    return new HttpUnauthorizedResult(response.Description);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        [HttpPost]
-        public ActionResult PreviewDraft(string pageUrl)
-        {
-            var isAdmin = CheckIfUserIsAdmin();
-            if(!isAdmin) throw new ApplicationException("Unable to preview draft: user is not an admin");
-
-            var cookie = new HttpCookie(_showDraftsCookieName, true.ToString()) { Secure = false };
-            Response.Cookies.Add(cookie);
-
-            return Redirect(pageUrl);
-        }
-
-        private bool CheckIfUserIsAdmin()
-        {
-            var cookie = Request.Cookies[_adminFormsCookieName];
-            if(cookie == null) return false;
-
-            FormsAuthenticationTicket ticket;
-            try
-            {
-                ticket = FormsAuthentication.Decrypt(cookie.Value);
-            }
-            catch (ArgumentException)
-            {
-                ticket = null;
-            }
-            return ticket != null;
-        }
-
-        private bool CheckIfHasToShowDrafts()
-        {
-            var showDraftsCookie = HttpContext.Request.Cookies[_showDraftsCookieName];
-            if (showDraftsCookie == null) return false;
-            return bool.Parse(showDraftsCookie.Value);
-        }
-
 #if DEBUG
+        [HttpPost]
         public string SimulateAdminLogin()
         {
             var ticket = new FormsAuthenticationTicket(1 /*version*/, "admin", DateTime.UtcNow /*issue date*/,
                                                            DateTime.UtcNow.AddMinutes(FormsAuthentication.Timeout.TotalMinutes), true, string.Empty);
 
             var encryptedTicket = FormsAuthentication.Encrypt(ticket);
-            var cookie = new HttpCookie(_adminFormsCookieName, encryptedTicket) { Secure = false };
+            var cookie = new HttpCookie(CmsEngine.AdminFormsCookieName, encryptedTicket) { Secure = false };
             Response.Cookies.Add(cookie);
-            Response.Cookies.Add(new HttpCookie(_showDraftsCookieName, true.ToString()));
 
             return "Admin login simulated";
         }
+
+        [HttpPost]
+        public string SimulateShowDraftsMode()
+        {
+            Response.Cookies.Add(new HttpCookie(CmsEngine.ShowDraftsCookieName, true.ToString()));
+
+            return "Show drafts mode simulated";
+        }
 #endif
     }
-
 }

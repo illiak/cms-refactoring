@@ -7,11 +7,17 @@ namespace MvcApplication1.Models.Domain
 {
     public class UrlRouter<TRoutable>
     {
-        private readonly Dictionary<string, TRoutable> _routables = new Dictionary<string,TRoutable>(); 
+        private readonly Dictionary<string, TRoutable> _routables = new Dictionary<string,TRoutable>();
 
         public void RegisterRoute(string pattern, TRoutable routable)
         {
            _routables.Add(pattern, routable);
+        }
+
+        public void RegisterRouteIfNotRegistered(string pattern, TRoutable routable)
+        {
+            if (_routables.ContainsValue(routable)) return;
+            _routables.Add(pattern, routable);
         }
 
         public RouteMatch<TRoutable> MatchOrNull(Uri url)
@@ -22,6 +28,18 @@ namespace MvcApplication1.Models.Domain
             var routable = _routables[urlString];
 
             return new RouteMatch<TRoutable> { IsExactMatch = true, Pattern = urlString, Routable = routable, Score = 1000};
+        }
+
+        public bool IsRegistered(TRoutable routable)
+        {
+            return _routables.ContainsValue(routable);
+        }
+
+        public void RemoveRoutableIfRegistered(TRoutable routable)
+        {
+            if (!IsRegistered(routable)) return;
+            var pair = _routables.Single(x => x.Value.Equals(routable));
+            _routables.Remove(pair.Key);
         }
     }
 

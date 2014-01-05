@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using NUnit.Framework;
 
 namespace MvcApplication1.Models
@@ -19,9 +20,21 @@ namespace MvcApplication1.Models
             _mvcApplicationContext = mvcApplicationContext;
             _viewDataRepository = viewDataRepository;
             Create(createPageData, contentStatus);
+            StatusChanged += () => { };
         }
 
-        public PageData Data { get { return _data; } }
+        public PageData     Data { get { return _data.Clone(); } }
+
+        public FileInfo     MarkupFile
+        {
+            get
+            {
+                if (Data.Status == ContentStatus.Deleted) return null;
+                return new FileInfo(_mvcApplicationContext.GetFileSystemPath((_data.VirtualPath)));
+            }
+        }
+
+        public event Action StatusChanged;
 
         void Create(CreatePageData createPageData, ContentStatus contentStatus)
         {
@@ -71,13 +84,50 @@ namespace MvcApplication1.Models
             return result.AbsolutePath;
         }
 
-        public Page     Publish()
+        public void     Publish()
         {
-            var publishedPageData = new CreatePageData { Markup = _data.Markup, Name = _data.Name, RoutePattern = _data.RoutePattern };
-            return new Page(publishedPageData, ContentStatus.Release, _mvcApplicationContext, _viewDataRepository);
+            if (_data.Status == ContentStatus.Published) throw new ApplicationException("Unable to publish already published Page");
+            if (_data.Status == ContentStatus.Deleted) throw new ApplicationException("Unable to publish deleted page");
+
+            Delete();
+            Create(new CreatePageData { Markup = _data.Markup, Name = _data.Name, RoutePattern = _data.RoutePattern }, ContentStatus.Published);
+            StatusChanged();
         }
-        
-        public void     Delete() { }
+
+        public void Delete()
+        {
+            var viewFilePath = _mvcApplicationContext.GetFileSystemPath(_data.VirtualPath);
+            var fileInfo = new FileInfo(viewFilePath);
+            fileInfo.Delete();
+
+            _viewDataRepository.Pages.RemoveAll(x => x.Id == _data.Id);
+            _viewDataRepository.SaveChanges();
+
+            _data.Status = ContentStatus.Deleted;
+            StatusChanged();
+        } 
+
+        public void Update(UpdatePageData updatePageData)
+        {
+            Update(from: updatePageData, to: _data);
+
+            var pageData = _viewDataRepository.Pages.Single(x => x.Id == _data.Id);
+            Update(from: _data, to: pageData);
+            _viewDataRepository.SaveChanges();
+        }
+
+        static void Update(PageData from, PageData to)
+        {
+            from.Markup = to.Markup;
+            from.Name = to.Name;
+            from.RoutePattern = to.RoutePattern;
+        }
+        static void Update(UpdatePageData from, PageData to)
+        {
+            from.Markup = to.Markup;
+            from.Name = to.Name;
+            from.RoutePattern = to.RoutePattern;
+        }
     }
 
     public class PageFactory
@@ -97,5 +147,5 @@ namespace MvcApplication1.Models
         }
     }
 
-    public enum ContentStatus { Draft, Release }
+    public enum ContentStatus { Draft, Published, Deleted }
 }

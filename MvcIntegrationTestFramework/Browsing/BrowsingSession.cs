@@ -56,6 +56,12 @@ namespace MvcIntegrationTestFramework.Browsing
             return ProcessRequest(url.AbsolutePath, HttpVerbs.Get, new NameValueCollection());
         }
 
+        public SerializableRequestResult Post(string url)
+        {
+            var uri = new Uri(url);
+            return ProcessRequest(uri.AbsolutePath, HttpVerbs.Post, new NameValueCollection());
+        }
+
         /// <summary>
         /// Sends a post to your url. Url should NOT start with a /
         /// </summary>

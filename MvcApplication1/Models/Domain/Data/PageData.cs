@@ -10,5 +10,10 @@ namespace MvcApplication1.Models
         public string           RoutePattern;
         public string           Markup;
         public string           VirtualPath;
+
+        public PageData Clone()
+        {
+            return (PageData)MemberwiseClone();
+        }
     }
 }

@@ -153,9 +153,12 @@
     <Compile Include="Models\Infrastructure\MvcRequestContext.cs" />
     <Compile Include="Models\Domain\Page.cs" />
     <Compile Include="Models\Infrastructure\RandomHelper.cs" />
-    <Compile Include="Models\Tests\EngineTestsIntegration.cs" />
+    <Compile Include="Models\Tests\Bdd.cs" />
+    <Compile Include="Models\Tests\Integration\EngineTests.cs" />
+    <Compile Include="Models\Tests\Unit\GivenCmsEngine.cs" />
+    <Compile Include="Models\Tests\Unit\GivenUpdatedPage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Models\Tests\EngineTests.cs" />
+    <Compile Include="Models\Tests\Unit\GivenNewlyCreatedPage.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\themes\base\images\ui-bg_flat_0_aaaaaa_40x100.png" />

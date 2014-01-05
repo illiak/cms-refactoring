@@ -20,6 +20,7 @@ namespace MvcApplication1
 //            );
 
             routes.MapRoute(name: "simulate admin login", url: "simulateAdminLogin", defaults: new { controller = "Cms", action = "SimulateAdminLogin"});
+            routes.MapRoute(name: "simulate show drafts mode", url: "simulateShowDraftsMode", defaults: new { controller = "Cms", action = "SimulateShowDraftsMode" });
 
             routes.MapRoute(name: "ProcessRequest",
                              url: "{*url}",
