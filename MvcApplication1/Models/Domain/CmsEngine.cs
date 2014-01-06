@@ -104,7 +104,7 @@ namespace MvcApplication1.Models
             return new Response { Body = pageHtmlBuilder.ToString(), Type = ResponseType.OK };
         }
 
-        public bool     CheckIfRequestUserIsAdmin(MvcRequestContext mvcRequestContext)
+        bool    CheckIfRequestUserIsAdmin(MvcRequestContext mvcRequestContext)
         {
             if (!mvcRequestContext.HasCookie(AdminFormsCookieName)) return false;
 
@@ -112,8 +112,7 @@ namespace MvcApplication1.Models
 
             return _mvcApplicationContext.IsFormsCookieValueValid(cookieValue);
         }
-
-        private bool    CheckIfHasToShowDrafts(MvcRequestContext mvcRequestContext)
+        bool    CheckIfHasToShowDrafts(MvcRequestContext mvcRequestContext)
         {
             if (!mvcRequestContext.HasCookie(ShowDraftsCookieName)) return false;
             var showDraftsCookieValue = mvcRequestContext.GetCookieValue(ShowDraftsCookieName);

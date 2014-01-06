@@ -144,6 +144,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Domain\CmsEngine.cs" />
+    <Compile Include="Models\Domain\ContentManager.cs" />
     <Compile Include="Models\Domain\Data\CreatePageData.cs" />
     <Compile Include="Models\Domain\Data\PageData.cs" />
     <Compile Include="Models\Infrastructure\ContentRepository.cs" />
