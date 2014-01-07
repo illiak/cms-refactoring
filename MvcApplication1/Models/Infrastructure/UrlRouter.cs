@@ -41,6 +41,11 @@ namespace MvcApplication1.Models.Domain
             var pair = _routables.Single(x => x.Value.Equals(routable));
             _routables.Remove(pair.Key);
         }
+
+        public void UnregisterAll()
+        {
+            _routables.Clear();
+        }
     }
 
     public class RouteMatch<TRoutable>

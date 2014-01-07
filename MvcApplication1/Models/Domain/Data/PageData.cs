@@ -6,10 +6,9 @@ namespace MvcApplication1.Models
     {
         public Guid             Id;
         public string           Name;
-        public ContentStatus    Status;
         public string           RoutePattern;
         public string           Markup;
-        public string           VirtualPath;
+        public string           ViewPath;
 
         public PageData Clone()
         {

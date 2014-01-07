@@ -19,6 +19,8 @@ namespace MvcApplication1
 //                defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
 //            );
 
+            routes.MapRoute(name: "update content files", url: "updateContentFiles", defaults: new { controller = "Cms", action = "UpdateContentFiles" });
+
             routes.MapRoute(name: "simulate admin login", url: "simulateAdminLogin", defaults: new { controller = "Cms", action = "SimulateAdminLogin"});
             routes.MapRoute(name: "simulate show drafts mode", url: "simulateShowDraftsMode", defaults: new { controller = "Cms", action = "SimulateShowDraftsMode" });
 

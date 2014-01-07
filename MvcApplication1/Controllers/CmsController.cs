@@ -11,8 +11,8 @@ namespace MvcApplication1.Controllers
 {
     public class CmsController : Controller
     {
-        private readonly CmsEngine _cmsEngine;
-        private readonly MvcApplicationContext _mvcApplicationContext;
+        private readonly CmsEngine              _cmsEngine;
+        private readonly MvcApplicationContext  _mvcApplicationContext;
 
         public CmsController(CmsEngine cmsEngine, MvcApplicationContext mvcApplicationContext)
         {
@@ -41,6 +41,13 @@ namespace MvcApplication1.Controllers
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        [HttpPost]
+        public ActionResult UpdateContentFiles()
+        {
+            _cmsEngine.UpdateContentFiles();
+            return new HttpStatusCodeResult(HttpStatusCode.OK); 
         }
 
 #if DEBUG

@@ -10,6 +10,7 @@ using System.Web.Routing;
 using System.Web.Security;
 using Microsoft.Practices.Unity;
 using MvcApplication1.Models;
+using MvcApplication1.Models.Domain;
 using Unity.Mvc4;
 
 namespace MvcApplication1
@@ -28,14 +29,17 @@ namespace MvcApplication1
             BundleConfig.RegisterBundles(BundleTable.Bundles);
 
             DependencyResolver.SetResolver(new UnityDependencyResolver(Container));
-            Container.RegisterType<CmsEngine>(new ContainerControlledLifetimeManager());
+            Container.RegisterType<CmsEngine>(new SingletonLifetimeManager());
+            Container.RegisterType<InMemoryContentManager>(new SingletonLifetimeManager()); //todo: should be substituted by ContentManager that relies on database and is not singleton
 
             var engine = Container.Resolve<CmsEngine>();
-            engine.CreatePage(
+            var page = engine.CreatePage(
                 name: "test page markup", 
                 routePattern: "http://localhost:33586/en-gb/testPage", 
                 markup: "test page markup goes here"
             );
+            page.Publish();
+            engine.UpdateContentFiles();
         }
 
         protected void Application_AuthenticateRequest(Object sender, EventArgs e)

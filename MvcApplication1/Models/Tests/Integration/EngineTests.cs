@@ -24,33 +24,13 @@ namespace MvcApplication1.Tests.Integration
         }
 
         [Test]
-        public void CanViewCreatedAndPublishedPage()
-        {
-            var host = AppHost.Simulate(@"\MvcApplication1");
-            host.Start(browsingSession =>
-            {
-                var cmsEngine = WebApiApplication.Container.Resolve<CmsEngine>();
-                
-                var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
-                
-                var url = hostAddress + "en-gb/" + RandomHelper.GetRandomString();
-                var name = "testPage" + RandomHelper.GetRandomString();
-
-                var page = cmsEngine.CreatePage(name: name, routePattern: url.ToString(), markup: markup);
-                page.Publish();
-
-                var response = browsingSession.Get(url);
-                Assert.AreEqual(200, response.ResponseStatusCode);
-            });
-        }
-
-        [Test]
         public void CanViewCreatedDraftPage()
         {
             var host = AppHost.Simulate(@"\MvcApplication1");
             host.Start(browsingSession =>
             {
                 var cmsEngine = WebApiApplication.Container.Resolve<CmsEngine>();
+                cmsEngine.ContentUpdated += () => browsingSession.Post(hostAddress + "updateContentFiles");
 
                 var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
 
@@ -58,9 +38,31 @@ namespace MvcApplication1.Tests.Integration
                 var name = "testPage" + RandomHelper.GetRandomString();
 
                 cmsEngine.CreatePage(name: name, routePattern: url.ToString(), markup: markup);
-
+                
                 browsingSession.Post(hostAddress + "simulateAdminLogin");
                 browsingSession.Post(hostAddress + "simulateShowDraftsMode");
+
+                var response = browsingSession.Get(url);
+                Assert.AreEqual(200, response.ResponseStatusCode);
+            });
+        }
+
+        [Test]
+        public void CanViewCreatedAndPublishedPage()
+        {
+            var host = AppHost.Simulate(@"\MvcApplication1");
+            host.Start(browsingSession =>
+            {
+                var cmsEngine = WebApiApplication.Container.Resolve<CmsEngine>();
+                cmsEngine.ContentUpdated += () => browsingSession.Post(hostAddress + "updateContentFiles");
+
+                var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
+
+                var url = hostAddress + "en-gb/" + RandomHelper.GetRandomString();
+                var name = "testPage" + RandomHelper.GetRandomString();
+
+                var page = cmsEngine.CreatePage(name: name, routePattern: url.ToString(), markup: markup);
+                page.Publish();
 
                 var response = browsingSession.Get(url);
                 Assert.AreEqual(200, response.ResponseStatusCode);

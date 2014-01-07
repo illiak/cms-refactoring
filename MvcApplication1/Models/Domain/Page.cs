@@ -2,131 +2,90 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using MvcApplication1.Models.Domain;
 using NUnit.Framework;
 
 namespace MvcApplication1.Models
 {
     public class Page
     {
-        private PageData                        _data;
+        private readonly Guid _id;
         private readonly MvcApplicationContext  _mvcApplicationContext;
         private readonly ContentRepository      _viewDataRepository;
+        private readonly InMemoryContentManager         _contentManager;
 
-        public Page(CreatePageData createPageData, MvcApplicationContext mvcApplicationContext, ContentRepository viewDataRepository)
-            : this(createPageData, ContentStatus.Draft, mvcApplicationContext, viewDataRepository) { }
+        public Action PageChanged;
 
-        protected Page(CreatePageData createPageData, ContentStatus contentStatus, MvcApplicationContext mvcApplicationContext, ContentRepository viewDataRepository) 
+        public Page(CreatePageData createPageData,  MvcApplicationContext mvcApplicationContext, ContentRepository viewDataRepository, InMemoryContentManager contentManager)
+            : this(mvcApplicationContext, viewDataRepository, contentManager)
+        {
+            _id = Guid.NewGuid();
+            Create(createPageData);
+        }
+        
+        internal Page(PageData page, MvcApplicationContext mvcApplicationContext, ContentRepository viewDataRepository, InMemoryContentManager contentManager)
+            : this(mvcApplicationContext, viewDataRepository, contentManager)
+        {
+            throw new NotImplementedException();
+        }
+
+        private Page(MvcApplicationContext mvcApplicationContext, ContentRepository viewDataRepository, InMemoryContentManager contentManager)
         {
             _mvcApplicationContext = mvcApplicationContext;
             _viewDataRepository = viewDataRepository;
-            Create(createPageData, contentStatus);
-            StatusChanged += () => { };
+            _contentManager = contentManager;
         }
 
-        public PageData     Data { get { return _data.Clone(); } }
+        public Guid                 Id { get { return _id; } }
+        public PageData             DataDraft { get { return _contentManager.GetContentItem<PageData>(_id).ContentDraft; } }
+        public PageData             DataPublished { get { return _contentManager.GetContentItem<PageData>(_id).ContentPublished; } }
+        public ContentItemStatus    Status { get { return _contentManager.GetContentItem<PageData>(_id).Status; } }
 
-        public FileInfo     MarkupFile
+        void Create(CreatePageData createPageData)
         {
-            get
+            Uri uri;
+            var isValidRoutePattern = Uri.TryCreate(createPageData.RoutePattern, UriKind.Absolute, out uri);
+            if(!isValidRoutePattern) throw new ApplicationException("Route pattern is not valid, make sure its absolute and not relative"); //relative patterns are not supported for now
+
+            var data = new PageData
             {
-                if (Data.Status == ContentStatus.Deleted) return null;
-                return new FileInfo(_mvcApplicationContext.GetFileSystemPath((_data.VirtualPath)));
-            }
-        }
-
-        public event Action StatusChanged;
-
-        void Create(CreatePageData createPageData, ContentStatus contentStatus)
-        {
-            const string viewsPath = "~/Views";
-
-            var draftsPath = Path.Combine(viewsPath, "/Draft");
-            var releasePath = Path.Combine(viewsPath, "/Release");
-
-            var routePath = GetPathFromRoutePattern(createPageData.RoutePattern);
-
-            var basePath = contentStatus == ContentStatus.Draft ? draftsPath : releasePath;
-
-            var viewVirtualPath = viewsPath + basePath + routePath + ".cshtml";
-
-            var viewFilePath = _mvcApplicationContext.GetFileSystemPath(viewVirtualPath);
-            var fileInfo = new FileInfo(viewFilePath);
-
-            Directory.CreateDirectory(fileInfo.Directory.FullName);
-
-            using (var writer = new StreamWriter(fileInfo.FullName))
-            {
-                // It seems all view files created in Visual Studio will have BOM. So, we need it here too.
-                writer.Write('\xfeff');
-                writer.Write(createPageData.Markup);
-            }
-
-            _data = new PageData
-            {
-                Id = Guid.NewGuid(),
+                Id = _id,
+                Markup = createPageData.Markup,
                 Name = createPageData.Name,
-                VirtualPath = viewVirtualPath,
-                Status = contentStatus,
                 RoutePattern = createPageData.RoutePattern,
-                Markup = createPageData.Markup
+                ViewPath = string.Format("{0}.cshtml", _id)
             };
-            _viewDataRepository.Pages.Add(_data);
-            _viewDataRepository.SaveChanges();
-        }
 
-        private string GetPathFromRoutePattern(string routePattern)
-        {
-            Uri result;
-            var routePatternIsValidUri = Uri.TryCreate(routePattern, UriKind.Absolute, out result);
-            if (!routePatternIsValidUri)
-                throw new NotImplementedException("Route pattern is not valid Uri: scenario not implemented yet");
-
-            return result.AbsolutePath;
+            _contentManager.Create<PageData>(_id, data);
         }
 
         public void     Publish()
         {
-            if (_data.Status == ContentStatus.Published) throw new ApplicationException("Unable to publish already published Page");
-            if (_data.Status == ContentStatus.Deleted) throw new ApplicationException("Unable to publish deleted page");
-
-            Delete();
-            Create(new CreatePageData { Markup = _data.Markup, Name = _data.Name, RoutePattern = _data.RoutePattern }, ContentStatus.Published);
-            StatusChanged();
+            _contentManager.Publish(_id);
+            PageChanged();
         }
 
         public void Delete()
         {
-            var viewFilePath = _mvcApplicationContext.GetFileSystemPath(_data.VirtualPath);
-            var fileInfo = new FileInfo(viewFilePath);
-            fileInfo.Delete();
-
-            _viewDataRepository.Pages.RemoveAll(x => x.Id == _data.Id);
-            _viewDataRepository.SaveChanges();
-
-            _data.Status = ContentStatus.Deleted;
-            StatusChanged();
+            _contentManager.Delete(_id);
+            PageChanged();
         } 
 
         public void Update(UpdatePageData updatePageData)
         {
-            Update(from: updatePageData, to: _data);
+            var contentItem = _contentManager.GetContentItem<PageData>(_id);
+            var contentToUpdate = contentItem.ContentDraft ?? contentItem.ContentPublished;
+            var clonedContentToUpdate = contentToUpdate.Clone(); //make sure that published version will not be changed by a chance
 
-            var pageData = _viewDataRepository.Pages.Single(x => x.Id == _data.Id);
-            Update(from: _data, to: pageData);
-            _viewDataRepository.SaveChanges();
-        }
-
-        static void Update(PageData from, PageData to)
-        {
-            from.Markup = to.Markup;
-            from.Name = to.Name;
-            from.RoutePattern = to.RoutePattern;
-        }
-        static void Update(UpdatePageData from, PageData to)
-        {
-            from.Markup = to.Markup;
-            from.Name = to.Name;
-            from.RoutePattern = to.RoutePattern;
+            _contentManager.Update<PageData>(_id, new PageData
+            {
+                Id = _id,
+                Markup = updatePageData.Markup, 
+                Name = updatePageData.Name, 
+                RoutePattern = updatePageData.RoutePattern, 
+                ViewPath = clonedContentToUpdate.ViewPath
+            });
+            PageChanged();
         }
     }
 
@@ -134,16 +93,18 @@ namespace MvcApplication1.Models
     {
         private readonly MvcApplicationContext  _mvcApplicationContext;
         private readonly ContentRepository      _viewDataRepository;
+        private readonly InMemoryContentManager         _contentManager;
 
-        public PageFactory(MvcApplicationContext mvcApplicationContext, ContentRepository viewDataRepository)
+        public PageFactory(MvcApplicationContext mvcApplicationContext, ContentRepository viewDataRepository, InMemoryContentManager contentManager)
         {
             _mvcApplicationContext = mvcApplicationContext;
             _viewDataRepository = viewDataRepository;
+            _contentManager = contentManager;
         }
 
         public Page Create(CreatePageData createPageData)
         {
-            return new Page(createPageData, _mvcApplicationContext, _viewDataRepository);
+            return new Page(createPageData, _mvcApplicationContext, _viewDataRepository, _contentManager);
         }
     }
 

@@ -150,6 +150,7 @@
     <Compile Include="Models\Infrastructure\ContentRepository.cs" />
     <Compile Include="Models\Domain\Language.cs" />
     <Compile Include="Models\Infrastructure\MvcApplicationContext.cs" />
+    <Compile Include="Models\Infrastructure\SingletonLifetimeManager.cs" />
     <Compile Include="Models\Infrastructure\UrlRouter.cs" />
     <Compile Include="Models\Infrastructure\MvcRequestContext.cs" />
     <Compile Include="Models\Domain\Page.cs" />
@@ -157,9 +158,9 @@
     <Compile Include="Models\Tests\Bdd.cs" />
     <Compile Include="Models\Tests\Integration\EngineTests.cs" />
     <Compile Include="Models\Tests\Unit\GivenCmsEngine.cs" />
-    <Compile Include="Models\Tests\Unit\GivenUpdatedPage.cs" />
+    <Compile Include="Models\Tests\Unit\GivenCreatedAndUpdatedPage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Models\Tests\Unit\GivenNewlyCreatedPage.cs" />
+    <Compile Include="Models\Tests\Unit\GivenCreatedPage.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\themes\base\images\ui-bg_flat_0_aaaaaa_40x100.png" />

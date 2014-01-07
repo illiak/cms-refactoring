@@ -8,20 +8,30 @@ using System.Web.Mvc;
 using Microsoft.Practices.Unity;
 using Moq;
 using MvcApplication1.Models;
+using MvcApplication1.Models.Domain;
 using MvcApplication1.Models.Infrastructure;
 using NUnit.Framework;
 
 namespace MvcApplication1.Tests
 {
-
-    public class GivenNewlyCreatedPage : GivenNewlyCreatedPageContext
+    public class GivenCreatedPage : GivenCreatedPageContext
     {
+        [Test]
+        public void ItsDataInitializedProperly()
+        {
+            Assert.That(_page.DataDraft.Name, Is.Not.Empty);
+            Assert.That(_page.DataDraft.Markup, Is.Not.Empty);
+            Assert.That(_page.DataDraft.RoutePattern, Is.Not.Empty);
+        }
+
         [Test]
         public void ItsDraftVersionCanBePreviewed()
         {
             _mvcRequestContextMock.HasAdminCookie = true;
             _mvcRequestContextMock.HasDraftCookie = true;
-            var response = _cmsEngine.ProcessRequest(_page.Data.RoutePattern);
+            _cmsEngine.UpdateContentFiles();
+
+            var response = _cmsEngine.ProcessRequest(_page.DataDraft.RoutePattern);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.OK));
             Assert.That(response.Body, Is.Not.Empty);
@@ -31,7 +41,7 @@ namespace MvcApplication1.Tests
         public void ItCanBePublishedAndViewed()
         {
             _page.Publish();
-            var response = _cmsEngine.ProcessRequest(_page.Data.RoutePattern);
+            var response = _cmsEngine.ProcessRequest(_page.DataPublished.RoutePattern);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.OK));
             Assert.That(response.Body, Is.Not.Empty);
@@ -40,24 +50,17 @@ namespace MvcApplication1.Tests
         [Test]
         public void ItsInDraftStatus()
         {
-            Assert.That(_page.Data.Status, Is.EqualTo(ContentStatus.Draft));
+            Assert.That(_page.Status, Is.EqualTo(ContentItemStatus.Draft));
         }
 
-        [Test]
-        public void ItsDataInitializedProperly()
-        {
-            Assert.That(_page.Data.Name, Is.Not.Empty);
-            Assert.That(_page.Data.Markup, Is.Not.Empty);
-            Assert.That(_page.Data.RoutePattern, Is.Not.Empty);
-            Assert.That(_page.Data.VirtualPath, Is.Not.Empty);
-            Assert.That(_page.MarkupFile.Exists);
-        }
-
-        [Test]
+        [Test, Ignore]
         public void ItCanBeDeletedAndNoLongerAccessible()
         {
             _page.Delete();
-            var response = _cmsEngine.ProcessRequest(_page.Data.RoutePattern);
+
+            _mvcRequestContextMock.HasAdminCookie = true;
+            _mvcRequestContextMock.HasDraftCookie = true;
+            var response = _cmsEngine.ProcessRequest(_page.DataDraft.RoutePattern);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.PageNotFound));
         }
@@ -68,19 +71,18 @@ namespace MvcApplication1.Tests
             var updateData = new UpdatePageData
             {
                 Name = "updated name",
-                RoutePattern = "/en-gb/updatedRoutePattern",
+                RoutePattern = "http://test.com/en-gb/updatedRoutePattern",
                 Markup = "<p>updated markup</p>"
             };
 
             _page.Update(updateData);
 
-            Assert.That(updateData.RoutePattern, Is.EqualTo(_page.Data.RoutePattern));
-
-            _cmsEngine.ProcessRequest(_page.Data.RoutePattern);
+            Assert.That(_page.Status, Is.EqualTo(ContentItemStatus.Draft));
+            Assert.That(updateData.RoutePattern, Is.EqualTo(_page.DataDraft.RoutePattern));
         }
     }
 
-    public abstract class GivenNewlyCreatedPageContext : GivenCmsEngineContext
+    public abstract class GivenCreatedPageContext : GivenCmsEngineContext
     {
         protected Page _page;
 

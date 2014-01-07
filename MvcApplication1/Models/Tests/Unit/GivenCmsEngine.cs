@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using Microsoft.Practices.Unity;
 using MvcApplication1.Models;
+using MvcApplication1.Models.Domain;
 using MvcApplication1.Models.Infrastructure;
 using NUnit.Framework;
 
@@ -38,8 +39,16 @@ namespace MvcApplication1.Tests
         {
             _mvcRequestContextMock = new MvcRequestContextMock();
             _container.RegisterInstance<MvcRequestContext>(_mvcRequestContextMock);
-            _container.RegisterInstance<MvcApplicationContext>(new MvcApplicationContextMock { FormsCookieIsAlwaysValid = true, MvcRequestContext = _mvcRequestContextMock }); //required to fake forms authentication
+            _container.RegisterInstance<MvcApplicationContext>(new MvcApplicationContextMock 
+            {
+                FormsCookieIsAlwaysValid = true, //faking forms authentication
+                MvcRequestContext = _mvcRequestContextMock
+            }); 
+            _container.RegisterType<InMemoryContentManager>(new SingletonLifetimeManager());
+
             _cmsEngine = _container.Resolve<CmsEngine>();
+
+            _cmsEngine.ContentUpdated += () => _cmsEngine.UpdateContentFiles(); //simulating content updater from admin side
         }
 
         protected Page CreateTestPage()
@@ -58,9 +67,9 @@ namespace MvcApplication1.Tests
             public bool HasDraftCookie;
             public bool HasAdminCookie;
 
-            public override StringBuilder RenderPage(Page page, object model = null)
+            public override StringBuilder RenderPageContentItemVersion(ContentItemVersion<PageData> pageContentItemVersion, object model = null)
             {
-                return new StringBuilder(string.Format("<rendered>{0}</rendered>", page.Data.Markup));
+                return new StringBuilder(string.Format("<rendered>{0}</rendered>", pageContentItemVersion.Content.Markup));
             }
 
             public override string GetCookieValue(string cookieName)
@@ -83,6 +92,12 @@ namespace MvcApplication1.Tests
                     return HasAdminCookie;
 
                 return false;
+            }
+
+            public string RenderPageToString(Page page, ContentVersionType versionType)
+            {
+                var pageMarkup = versionType == ContentVersionType.Draft ? page.DataDraft.Markup : page.DataPublished.Markup;
+                return new StringBuilder(string.Format("<rendered>{0}</rendered>", pageMarkup)).ToString();
             }
         }
 
