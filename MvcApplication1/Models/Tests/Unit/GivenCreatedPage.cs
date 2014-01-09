@@ -25,13 +25,19 @@ namespace MvcApplication1.Tests
         }
 
         [Test]
+        public void CanGetLastVersion()
+        {
+            Assert.That(_page.LastVersion, Is.Not.Null);
+        }
+
+        [Test]
         public void ItsDraftVersionCanBePreviewed()
         {
             _mvcRequestContextMock.HasAdminCookie = true;
             _mvcRequestContextMock.HasDraftCookie = true;
-            _cmsEngine.UpdateContentFiles();
+            _cmsFrontendService.UpdateContentFiles();
 
-            var response = _cmsEngine.ProcessRequest(_page.DataDraft.RoutePattern);
+            var response = _cmsFrontendService.ProcessRequest(_page.DataDraft.RoutePattern);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.OK));
             Assert.That(response.Body, Is.Not.Empty);
@@ -41,7 +47,7 @@ namespace MvcApplication1.Tests
         public void ItCanBePublishedAndViewed()
         {
             _page.Publish();
-            var response = _cmsEngine.ProcessRequest(_page.DataPublished.RoutePattern);
+            var response = _cmsFrontendService.ProcessRequest(_page.DataPublished.RoutePattern);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.OK));
             Assert.That(response.Body, Is.Not.Empty);
@@ -60,7 +66,7 @@ namespace MvcApplication1.Tests
 
             _mvcRequestContextMock.HasAdminCookie = true;
             _mvcRequestContextMock.HasDraftCookie = true;
-            var response = _cmsEngine.ProcessRequest(_page.DataDraft.RoutePattern);
+            var response = _cmsFrontendService.ProcessRequest(_page.DataDraft.RoutePattern);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.PageNotFound));
         }
@@ -71,14 +77,14 @@ namespace MvcApplication1.Tests
             var updateData = new UpdatePageData
             {
                 Name = "updated name",
-                RoutePattern = "http://test.com/en-gb/updatedRoutePattern",
+                Route = "http://test.com/en-gb/updatedRoutePattern",
                 Markup = "<p>updated markup</p>"
             };
 
             _page.Update(updateData);
 
             Assert.That(_page.Status, Is.EqualTo(ContentItemStatus.Draft));
-            Assert.That(updateData.RoutePattern, Is.EqualTo(_page.DataDraft.RoutePattern));
+            Assert.That(updateData.Route, Is.EqualTo(_page.DataDraft.RoutePattern));
         }
     }
 

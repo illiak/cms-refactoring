@@ -9,13 +9,14 @@ namespace MvcApplication1.Models.Domain
     {
         private readonly Dictionary<Guid, ContentItem> _contentItems = new Dictionary<Guid, ContentItem>();
 
-        public IEnumerable<ContentItem<TContent>>           GetContentItems<TContent>() { throw new NotImplementedException(); }
-
+        public Guid[]                                       GetAllContentIds()
+        {
+            return _contentItems.Select(x => x.Key).ToArray();
+        }
         public ContentItem<TContent>                        GetContentItem<TContent>(Guid id)
         {
             return (ContentItem<TContent>)_contentItems[id];
         }
-
         public IEnumerable<ContentItemVersion<TContent>>    GetVersions<TContent>(ContentVersionType versionType)
         {
             return _contentItems.Select(x => GetVersionOrNull<TContent>(x.Key, versionType))
@@ -48,17 +49,40 @@ namespace MvcApplication1.Models.Domain
 
             if (contentItem == null) return null;
 
-            return new ContentItemVersion<TContent>((ContentItem<TContent>)contentItem, versionType);
+            return new ContentItemVersion<TContent>
+            {
+                Id = id, 
+                Content = (TContent) (versionType == ContentVersionType.Draft ? contentItem.ContentDraft : contentItem.ContentPublished),
+                Type = versionType
+            };
+        }
+        public ContentItemVersion<TContent>                 GetLastVersion<TContent>(Guid id) where TContent : class
+        {
+            var contentItem = GetContentItem<TContent>(id);
+            switch (contentItem.Status)
+            {
+                case ContentItemStatus.Draft:
+                    return new ContentItemVersion<TContent> { Id = id, Content = contentItem.ContentDraft, Type = ContentVersionType.Draft };
+                case ContentItemStatus.Published:
+                    return new ContentItemVersion<TContent> { Id = id, Content = contentItem.ContentPublished, Type = ContentVersionType.Published };
+                case ContentItemStatus.PublishedAndHasDraft:
+                    return new ContentItemVersion<TContent> { Id = id, Content = contentItem.ContentDraft, Type = ContentVersionType.Draft };
+                case ContentItemStatus.PublishedAndDeletedInDraft:
+                    return new ContentItemVersion<TContent> { Id = id, Content = null, Type = ContentVersionType.Draft, ContentIsDeleted = true };
+                case ContentItemStatus.Deleted:
+                    return new ContentItemVersion<TContent> { Id = id, Content = null, Type = ContentVersionType.Published, ContentIsDeleted = true };
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
-        public ContentItem<TContent> Create<TContent>(Guid id, TContent content)
+        public ContentItem<TContent>    Create<TContent>(Guid id, TContent content)
         {
             var contentItem = new ContentItem<TContent> { Id = id, ContentDraft = content, Status = ContentItemStatus.Draft };
             _contentItems.Add(id, contentItem);
             return contentItem;
         }
-
-        public void Update<TContent>(Guid id, TContent content)
+        public void                     Update<TContent>(Guid id, TContent content)
         {
             var contentItem = GetContentItem<TContent>(id);
             
@@ -73,15 +97,13 @@ namespace MvcApplication1.Models.Domain
                     throw new NotImplementedException();
                 case ContentItemStatus.PublishedAndDeletedInDraft:
                     throw new NotImplementedException();
-                case ContentItemStatus.DeletedInDraftAndNeverPublished:
-                    throw new NotImplementedException();
-                case ContentItemStatus.DeletedVersionPublished:
+                case ContentItemStatus.Deleted:
                     throw new NotImplementedException();
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
-        public void Delete(Guid id) { }
+        public void                     Delete(Guid id) { throw new NotImplementedException(); }
 
         public void Publish(Guid contentItemId)
         {
@@ -103,10 +125,8 @@ namespace MvcApplication1.Models.Domain
                     throw new NotImplementedException();
                 case ContentItemStatus.PublishedAndDeletedInDraft:
                     throw new NotImplementedException();
-                case ContentItemStatus.DeletedInDraftAndNeverPublished:
-                    throw new ApplicationException("Content item was deleted in draft and was never published before, so there is nothing to publish");
-                case ContentItemStatus.DeletedVersionPublished:
-                    throw new ApplicationException("Deleted version of the content was published already");;
+                case ContentItemStatus.Deleted:
+                    throw new ApplicationException("Unable to publish content that has been deleted before publishing or when deleted version was already published before");
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -115,35 +135,22 @@ namespace MvcApplication1.Models.Domain
 
     public class ContentItemVersion<TContent>
     {
-        private readonly ContentItem<TContent> _contentItem;
-        private readonly ContentVersionType _versionType;
-
-        public ContentItemVersion(ContentItem<TContent> contentItem, ContentVersionType versionType)
-        {
-            _contentItem = contentItem;
-            _versionType = versionType;
-        }
-
-        public Guid                 Id { get { return _contentItem.Id; } }
-        public ContentVersionType   Type { get { return _versionType; } }
-        public TContent             Content { 
-            get
-            {
-                return _versionType == ContentVersionType.Draft
-                    ? _contentItem.ContentDraft
-                    : _contentItem.ContentPublished;
-            }
-        }
+        public Guid                 Id { get; set; }
+        public ContentVersionType   Type { get; set; }
+        public TContent             Content { get; set; }
+        public bool                 ContentIsDeleted { get; set; }
     }
-
-    public enum ContentVersionType { Draft, Published }
 
     public class ContentItem
     {
         public Guid                Id { get; set; }
         public ContentItemStatus   Status { get; set; }
+        
         public object              ContentDraft { get; set; }
+        public bool                ContentDraftIsDeleted { get; set; }
+
         public object              ContentPublished { get; set; }
+        public bool                ContentPublishedIsDeleted { get; set; }
     }
 
     public class ContentItem<TContent> : ContentItem
@@ -152,5 +159,6 @@ namespace MvcApplication1.Models.Domain
         public new TContent             ContentPublished { get { return (TContent)base.ContentPublished; } set { base.ContentPublished = value; } }
     }
 
-    public enum ContentItemStatus { Draft, Published, PublishedAndHasDraft, PublishedAndDeletedInDraft, DeletedInDraftAndNeverPublished, DeletedVersionPublished }
+    public enum ContentItemStatus { Draft, Published, PublishedAndHasDraft, PublishedAndDeletedInDraft, Deleted }
+    public enum ContentVersionType { Draft, Published }
 } 

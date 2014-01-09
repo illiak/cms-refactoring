@@ -15,7 +15,7 @@ namespace MvcApplication1.Tests
             _updateData = new UpdatePageData
             {
                 Name = "updated name",
-                RoutePattern = "/en-gb/updatedRoutePattern",
+                Route = "/en-gb/updatedRoutePattern",
                 Markup = "<p>updated markup</p>"
             };
 
@@ -34,7 +34,7 @@ namespace MvcApplication1.Tests
             var updateData = new UpdatePageData
             {
                 Name = "updated name",
-                RoutePattern = "http://test.com/en-gb/updatedRoutePattern",
+                Route = "http://test.com/en-gb/updatedRoutePattern",
                 Markup = "<p>updated markup</p>"
             };
 
@@ -42,7 +42,7 @@ namespace MvcApplication1.Tests
 
             _mvcRequestContextMock.HasAdminCookie = true;
             _mvcRequestContextMock.HasDraftCookie = true;
-            var response = _cmsEngine.ProcessRequest(_page.DataDraft.RoutePattern);
+            var response = _cmsFrontendService.ProcessRequest(_page.DataDraft.RoutePattern);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.OK));
         }

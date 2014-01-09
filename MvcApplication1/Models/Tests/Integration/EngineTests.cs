@@ -19,25 +19,21 @@ namespace MvcApplication1.Tests.Integration
     {
         const string hostAddress = "http://127.0.0.1/"; //MvcIntegrationTestFramework works only with 127.0.0.1 address
 
-        public EngineTests()
-        {
-        }
-
         [Test]
         public void CanViewCreatedDraftPage()
         {
             var host = AppHost.Simulate(@"\MvcApplication1");
             host.Start(browsingSession =>
             {
-                var cmsEngine = WebApiApplication.Container.Resolve<CmsEngine>();
-                cmsEngine.ContentUpdated += () => browsingSession.Post(hostAddress + "updateContentFiles");
+                var cmsBackendService = WebApiApplication.Container.Resolve<CmsBackendService>();
+                cmsBackendService.ContentUpdated += () => browsingSession.Post(hostAddress + "updateContentFiles");
 
                 var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
 
                 var url = hostAddress + "en-gb/" + RandomHelper.GetRandomString();
                 var name = "testPage" + RandomHelper.GetRandomString();
 
-                cmsEngine.CreatePage(name: name, routePattern: url.ToString(), markup: markup);
+                cmsBackendService.CreatePage(name: name, route: url.ToString(), markup: markup);
                 
                 browsingSession.Post(hostAddress + "simulateAdminLogin");
                 browsingSession.Post(hostAddress + "simulateShowDraftsMode");
@@ -53,15 +49,15 @@ namespace MvcApplication1.Tests.Integration
             var host = AppHost.Simulate(@"\MvcApplication1");
             host.Start(browsingSession =>
             {
-                var cmsEngine = WebApiApplication.Container.Resolve<CmsEngine>();
-                cmsEngine.ContentUpdated += () => browsingSession.Post(hostAddress + "updateContentFiles");
+                var cmsBackendService = WebApiApplication.Container.Resolve<CmsBackendService>();
+                cmsBackendService.ContentUpdated += () => browsingSession.Post(hostAddress + "updateContentFiles");
 
                 var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
 
                 var url = hostAddress + "en-gb/" + RandomHelper.GetRandomString();
                 var name = "testPage" + RandomHelper.GetRandomString();
 
-                var page = cmsEngine.CreatePage(name: name, routePattern: url.ToString(), markup: markup);
+                var page = cmsBackendService.CreatePage(name: name, route: url.ToString(), markup: markup);
                 page.Publish();
 
                 var response = browsingSession.Get(url);

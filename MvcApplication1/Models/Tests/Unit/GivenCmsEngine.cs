@@ -1,11 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.Practices.Unity;
 using MvcApplication1.Models;
 using MvcApplication1.Models.Domain;
 using MvcApplication1.Models.Infrastructure;
 using NUnit.Framework;
+using WebGrease.Css.Extensions;
 
 namespace MvcApplication1.Tests
 {
@@ -20,11 +23,37 @@ namespace MvcApplication1.Tests
         }
 
         [Test]
+        public void CanCreateMultiplePages()
+        {
+            var pages = CreateMultipleTestPages();
+
+            foreach (var page in pages) {
+                Assert.That(page, Is.Not.Null);
+            }
+        }
+
+        [Test]
+        public void UnableToCreatePageWithInvalidName()
+        {
+            var markup = GenerateValidMarkup();
+            var route = GenerateValidRoute();
+
+            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage(string.Empty, route, markup));
+            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage("/test", route, markup));
+            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage("test/", route, markup));
+            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage("test1//test2", route, markup));
+            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage("test1///test2", route, markup));
+            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage("test1 test2", route, markup));
+            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage("test1%test2", route, markup)); //some weird invalid character
+        }
+
+
+        [Test]
         public void QueryingNotExistingPageResultsInNotFoundResponse()
         {
             var notExistingPageUrl = string.Format("http://test.com/en-gb/{0}", RandomHelper.GetRandomString());
 
-            var response = _cmsEngine.ProcessRequest(notExistingPageUrl);
+            var response = _cmsFrontendService.ProcessRequest(notExistingPageUrl);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.PageNotFound));
         }
@@ -32,7 +61,8 @@ namespace MvcApplication1.Tests
 
     public abstract class GivenCmsEngineContext : BddUnitTestBase
     {
-        protected CmsEngine             _cmsEngine;
+        protected CmsFrontendService    _cmsFrontendService;
+        protected CmsBackendService     _cmsBackendService;
         protected MvcRequestContextMock _mvcRequestContextMock;
 
         protected override void Given()
@@ -46,9 +76,9 @@ namespace MvcApplication1.Tests
             }); 
             _container.RegisterType<InMemoryContentManager>(new SingletonLifetimeManager());
 
-            _cmsEngine = _container.Resolve<CmsEngine>();
-
-            _cmsEngine.ContentUpdated += () => _cmsEngine.UpdateContentFiles(); //simulating content updater from admin side
+            _cmsFrontendService = _container.Resolve<CmsFrontendService>();
+            _cmsBackendService = _container.Resolve<CmsBackendService>();
+            _cmsBackendService.ContentUpdated += () => _cmsFrontendService.UpdateContentFiles(); //simulating content updater from admin side
         }
 
         protected Page CreateTestPage()
@@ -57,7 +87,23 @@ namespace MvcApplication1.Tests
             var routePattern = string.Format("http://test.com/en-gb/{0}", RandomHelper.GetRandomString());
             var name = "testPage-" + RandomHelper.GetRandomString();
 
-            return _cmsEngine.CreatePage(name, routePattern, markup);
+            return _cmsBackendService.CreatePage(name, routePattern, markup);
+        }
+
+        protected IEnumerable<Page> CreateMultipleTestPages()
+        {
+            for (var i = 0; i < 10; i++)
+                yield return CreateTestPage();
+        }
+
+        protected string GenerateValidMarkup()
+        {
+            return string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
+        }
+
+        protected string GenerateValidRoute()
+        {
+            return string.Format("http://test.com/en-gb/{0}", RandomHelper.GetRandomString());
         }
 
         #region Mocks
@@ -74,10 +120,10 @@ namespace MvcApplication1.Tests
 
             public override string GetCookieValue(string cookieName)
             {
-                if (cookieName == CmsEngine.ShowDraftsCookieName)
+                if (cookieName == CmsFrontendService.ShowDraftsCookieName)
                     return HasDraftCookie.ToString();
 
-                if (cookieName == CmsEngine.AdminFormsCookieName)
+                if (cookieName == CmsFrontendService.AdminFormsCookieName)
                     return "valid cookie for admin";
 
                 throw new ApplicationException("this mock was intended for querying draft and admin cookies only");
@@ -85,10 +131,10 @@ namespace MvcApplication1.Tests
 
             public override bool HasCookie(string cookieName)
             {
-                if (cookieName == CmsEngine.ShowDraftsCookieName)
+                if (cookieName == CmsFrontendService.ShowDraftsCookieName)
                     return HasDraftCookie;
 
-                if (cookieName == CmsEngine.AdminFormsCookieName)
+                if (cookieName == CmsFrontendService.AdminFormsCookieName)
                     return HasAdminCookie;
 
                 return false;

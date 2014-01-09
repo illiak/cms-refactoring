@@ -29,17 +29,18 @@ namespace MvcApplication1
             BundleConfig.RegisterBundles(BundleTable.Bundles);
 
             DependencyResolver.SetResolver(new UnityDependencyResolver(Container));
-            Container.RegisterType<CmsEngine>(new SingletonLifetimeManager());
+            Container.RegisterType<CmsFrontendService>(new SingletonLifetimeManager());
             Container.RegisterType<InMemoryContentManager>(new SingletonLifetimeManager()); //todo: should be substituted by ContentManager that relies on database and is not singleton
 
-            var engine = Container.Resolve<CmsEngine>();
-            var page = engine.CreatePage(
+            var cmsBackendService = Container.Resolve<CmsBackendService>();
+            var cmsFrontendService = Container.Resolve<CmsFrontendService>();
+            var page = cmsBackendService.CreatePage(
                 name: "test page markup", 
-                routePattern: "http://localhost:33586/en-gb/testPage", 
+                route: "http://localhost:33586/en-gb/testPage", 
                 markup: "test page markup goes here"
             );
             page.Publish();
-            engine.UpdateContentFiles();
+            cmsFrontendService.UpdateContentFiles();
         }
 
         protected void Application_AuthenticateRequest(Object sender, EventArgs e)

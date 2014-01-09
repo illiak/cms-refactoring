@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Management.Instrumentation;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Hosting;
 using System.Web.Security;
@@ -11,62 +11,32 @@ using WebGrease.Css.Extensions;
 
 namespace MvcApplication1.Models
 {
-    public class CmsEngine
+    public class CmsFrontendService
     {
         private readonly MvcApplicationContext  _mvcApplicationContext;
-        private readonly PageFactory            _pageFactory;
         private readonly UrlRouter<PageData>    _releaseUrlRouter;
         private readonly UrlRouter<PageData>    _draftUrlRouter;
         private readonly InMemoryContentManager _contentManager;
         
-
         public const string AdminFormsCookieName = "CmsAdminFormsAuth";
         public const string ShowDraftsCookieName = "CmsShowDrafts";
 
-        public event Action ContentUpdated;
-
-        public CmsEngine(MvcApplicationContext mvcApplicationContext, 
-                         PageFactory pageFactory, 
-                         InMemoryContentManager contentManager)
+        public CmsFrontendService(MvcApplicationContext mvcApplicationContext, 
+                                  InMemoryContentManager contentManager)
         {
             _mvcApplicationContext = mvcApplicationContext;
-            _pageFactory = pageFactory;
             _contentManager = contentManager;
             _releaseUrlRouter = new UrlRouter<PageData>();
             _draftUrlRouter = new UrlRouter<PageData>();
-
-            ContentUpdated += () => {}; //so we don't check for null each time we firing it
         }
 
-        public IEnumerable<Language>    GetLanguages()
-        {
-            return new[] { new Language { Code = "en-gb", Name = "English" } };
-        }
-
-        public Page[]   CreatePages(CreatePageData[] data)
-        {
-            return data.Select(CreatePage).ToArray();
-        }
-        public Page     CreatePage(string name, string routePattern, string markup)
-        {
-            var page = CreatePage(new CreatePageData { Name = name, Markup = markup, RoutePattern = routePattern });
-            page.PageChanged += () => ContentUpdated();
-            ContentUpdated();
-            return page;
-        }
-
-        private Page    CreatePage(CreatePageData createPageData)
-        {
-            return _pageFactory.Create(createPageData);
-        }
-
-        public void     UpdateContentFiles()
+        public void UpdateContentFiles()
         {
             var viewsDirectory = new DirectoryInfo(_mvcApplicationContext.GetFileSystemPath("~/Views"));
             var draftsDirectory = viewsDirectory.CreateSubdirectory("Draft");
             var publishedDirectory = viewsDirectory.CreateSubdirectory("Published");
 
-            
+
             ClearDirectory(draftsDirectory);
             var draftContentItems = _contentManager.GetVersions<PageData>(ContentVersionType.Draft);
             _draftUrlRouter.UnregisterAll();
@@ -89,12 +59,12 @@ namespace MvcApplication1.Models
             }
         }
 
-        private void ClearDirectory(DirectoryInfo directory)
+        static void ClearDirectory(DirectoryInfo directory)
         {
             directory.EnumerateFileSystemInfos().ForEach(DeleteFileSystemInfo);
         }
 
-        private static void DeleteFileSystemInfo(FileSystemInfo fsi)
+        static void DeleteFileSystemInfo(FileSystemInfo fsi)
         {
             fsi.Attributes = FileAttributes.Normal;
             var di = fsi as DirectoryInfo;
@@ -104,9 +74,9 @@ namespace MvcApplication1.Models
                     DeleteFileSystemInfo(childFsi);
 
             fsi.Delete();
-        }  
+        }
 
-        void CreateViewFile(string markup, string viewFilePath)
+        static void CreateViewFile(string markup, string viewFilePath)
         {
             var fileInfo = new FileInfo(viewFilePath);
 
