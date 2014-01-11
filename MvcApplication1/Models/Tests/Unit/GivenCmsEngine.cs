@@ -57,6 +57,11 @@ namespace MvcApplication1.Tests
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.PageNotFound));
         }
+
+        public void Test2()
+        {
+            
+        }
     }
 
     public abstract class GivenCmsEngineContext : BddUnitTestBase

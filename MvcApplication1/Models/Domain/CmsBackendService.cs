@@ -26,11 +26,19 @@ namespace MvcApplication1.Models
             return new[] { new Language { Code = "en-gb", Name = "English" } };
         }
 
-        public Page[] CreatePages(CreatePageData[] data)
+        public IEnumerable<ContentItemVersion2<PageData>> PagesGetLastVersions()
+        {
+            throw new NotImplementedException();
+        }
+        public 
+
+
+
+        public Page[]   CreatePages(CreatePageData[] data)
         {
             return data.Select(CreatePage).ToArray();
         }
-        public Page CreatePage(string name, string route, string markup)
+        public Page     CreatePage(string name, string route, string markup)
         {
             var page = CreatePage(new CreatePageData { Name = name, Markup = markup, Route = route });
             page.PageChanged += () => ContentUpdated();
@@ -38,12 +46,12 @@ namespace MvcApplication1.Models
             return page;
         }
 
-        private Page CreatePage(CreatePageData createPageData)
+        private Page    CreatePage(CreatePageData createPageData)
         {
             return _pageFactory.Create(createPageData);
         }
 
-        public Page GetPage(Guid id)
+        public Page     GetPage(Guid id)
         {
             return _pageFactory.Create(id);
         }
