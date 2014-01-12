@@ -8,6 +8,7 @@ using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
 using System.Web.Security;
+using FCG.RegoCms;
 using Microsoft.Practices.Unity;
 using MvcApplication1.Models;
 using MvcApplication1.Models.Domain;
@@ -30,7 +31,7 @@ namespace MvcApplication1
 
             DependencyResolver.SetResolver(new UnityDependencyResolver(Container));
             Container.RegisterType<CmsFrontendService>(new SingletonLifetimeManager());
-            Container.RegisterType<InMemoryContentManager>(new SingletonLifetimeManager()); //todo: should be substituted by ContentManager that relies on database and is not singleton
+            Container.RegisterType<ContentService>(new SingletonLifetimeManager()); 
 
             var cmsBackendService = Container.Resolve<CmsBackendService>();
             var cmsFrontendService = Container.Resolve<CmsFrontendService>();

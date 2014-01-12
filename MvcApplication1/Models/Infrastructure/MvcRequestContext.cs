@@ -4,6 +4,7 @@ using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.UI.WebControls;
+using FCG.RegoCms;
 using Microsoft.Ajax.Utilities;
 using MvcApplication1.Models.Domain;
 
@@ -30,7 +31,7 @@ namespace MvcApplication1.Models
             _viewData.Model = model;
             using (var writer = new StringWriter())
             {
-                var versionFolderName = pageContentItemVersion.Type == ContentVersionType.Draft ? "Draft/" : "Published/";
+                var versionFolderName = pageContentItemVersion.Type == ContentItemVersionType.Draft ? "Draft/" : "Published/";
                 var pageVirtualPath = "~/Views/" + versionFolderName + pageContentItemVersion.Content.ViewPath;
                 var viewResult = ViewEngines.Engines.FindPartialView(_controllerContext, pageVirtualPath);
 

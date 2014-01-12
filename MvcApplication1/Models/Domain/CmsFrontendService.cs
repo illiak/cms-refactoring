@@ -1,31 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Management.Instrumentation;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Hosting;
 using System.Web.Security;
+using MvcApplication1.Models;
 using MvcApplication1.Models.Domain;
 using WebGrease.Css.Extensions;
 
-namespace MvcApplication1.Models
+namespace FCG.RegoCms
 {
     public class CmsFrontendService
     {
         private readonly MvcApplicationContext  _mvcApplicationContext;
         private readonly UrlRouter<PageData>    _releaseUrlRouter;
         private readonly UrlRouter<PageData>    _draftUrlRouter;
-        private readonly InMemoryContentManager _contentManager;
+        private readonly ContentService _contentService;
         
         public const string AdminFormsCookieName = "CmsAdminFormsAuth";
         public const string ShowDraftsCookieName = "CmsShowDrafts";
 
-        public CmsFrontendService(MvcApplicationContext mvcApplicationContext, 
-                                  InMemoryContentManager contentManager)
+        public CmsFrontendService(MvcApplicationContext mvcApplicationContext,
+                                  ContentService contentService)
         {
             _mvcApplicationContext = mvcApplicationContext;
-            _contentManager = contentManager;
+            _contentService = contentService;
             _releaseUrlRouter = new UrlRouter<PageData>();
             _draftUrlRouter = new UrlRouter<PageData>();
         }
@@ -33,12 +35,12 @@ namespace MvcApplication1.Models
         public void UpdateContentFiles()
         {
             var viewsDirectory = new DirectoryInfo(_mvcApplicationContext.GetFileSystemPath("~/Views"));
+
+            //update page content files
             var draftsDirectory = viewsDirectory.CreateSubdirectory("Draft");
-            var publishedDirectory = viewsDirectory.CreateSubdirectory("Published");
-
-
             ClearDirectory(draftsDirectory);
-            var draftContentItems = _contentManager.GetVersions<PageData>(ContentVersionType.Draft);
+
+            var draftContentItems = _contentService.GetContentItems<PageData>().Select(x => x.Last);
             _draftUrlRouter.UnregisterAll();
             foreach (var draftPageDataItem in draftContentItems)
             {
@@ -47,9 +49,9 @@ namespace MvcApplication1.Models
                 _draftUrlRouter.RegisterRoute(draftPageDataItem.Content.RoutePattern, draftPageDataItem.Content);
             }
 
-
+            var publishedDirectory = viewsDirectory.CreateSubdirectory("Published");
             ClearDirectory(publishedDirectory);
-            var publishedPageDataItems = _contentManager.GetVersions<PageData>(ContentVersionType.Published);
+            var publishedPageDataItems = _contentService.GetContentItems<PageData>().Select(x => x.Published);
             _releaseUrlRouter.UnregisterAll();
             foreach (var publishedPageDataItem in publishedPageDataItems)
             {
@@ -112,10 +114,12 @@ namespace MvcApplication1.Models
 
             var pageData = match.Routable;
 
-            var contentVersionType = showDrafts ? ContentVersionType.Draft : ContentVersionType.Published;
-            var pageContentItemVersion = _contentManager.GetVersionOrNull<PageData>(pageData.Id, contentVersionType);
+            var contentItem = _contentService.GetContentItem<PageData>(pageData.Id);
+            var pageContentItemVersion = showDrafts ? contentItem.Last : contentItem.Published;
 
-            var pageHtmlBuilder = mvcRequestContext.RenderPageContentItemVersion(pageContentItemVersion: pageContentItemVersion, model: new object());
+            var pageHtmlBuilder = mvcRequestContext.RenderPageContentItemVersion(
+                pageContentItemVersion: pageContentItemVersion, model: new object()
+            );
 
             return new Response { Body = pageHtmlBuilder.ToString(), Type = ResponseType.OK };
         }

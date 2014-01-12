@@ -1,3 +1,4 @@
+using FCG.RegoCms;
 using MvcApplication1.Models;
 using MvcApplication1.Models.Domain;
 using NUnit.Framework;

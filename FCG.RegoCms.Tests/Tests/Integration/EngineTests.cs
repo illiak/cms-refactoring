@@ -5,8 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Web;
 using System.Web.Mvc;
+using FCG.RegoCms;
 using Microsoft.Practices.Unity;
-using Moq;
 using MvcApplication1.Models;
 using MvcApplication1.Models.Infrastructure;
 using MvcIntegrationTestFramework.Hosting;
@@ -26,7 +26,7 @@ namespace MvcApplication1.Tests.Integration
             host.Start(browsingSession =>
             {
                 var cmsBackendService = WebApiApplication.Container.Resolve<CmsBackendService>();
-                cmsBackendService.ContentUpdated += () => browsingSession.Post(hostAddress + "updateContentFiles");
+                cmsBackendService.ContentChanged += () => browsingSession.Post(hostAddress + "updateContentFiles");
 
                 var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
 
@@ -50,7 +50,7 @@ namespace MvcApplication1.Tests.Integration
             host.Start(browsingSession =>
             {
                 var cmsBackendService = WebApiApplication.Container.Resolve<CmsBackendService>();
-                cmsBackendService.ContentUpdated += () => browsingSession.Post(hostAddress + "updateContentFiles");
+                cmsBackendService.ContentChanged += () => browsingSession.Post(hostAddress + "updateContentFiles");
 
                 var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
 

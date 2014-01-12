@@ -11,10 +11,10 @@ namespace MvcApplication1.Tests
         public BddTestBase()
         {
             _container = new UnityContainer();
-        } 
+        }
 
         [SetUp]
-        protected virtual void Given() { }
+        protected abstract void Given();
     }
 
     [Category("Unit")]

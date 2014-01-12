@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using FCG.RegoCms;
 using Microsoft.Practices.Unity;
 using MvcApplication1.Models;
 using MvcApplication1.Models.Domain;
 using MvcApplication1.Models.Infrastructure;
 using NUnit.Framework;
-using WebGrease.Css.Extensions;
 
 namespace MvcApplication1.Tests
 {
-    public class GivenCmsEngine : GivenCmsEngineContext
+    public class GivenCmsServices : GivenCmsServicesContext
     {
         [Test]
         public void NewPageCanBeCreated()
@@ -27,9 +27,8 @@ namespace MvcApplication1.Tests
         {
             var pages = CreateMultipleTestPages();
 
-            foreach (var page in pages) {
+            foreach (var page in pages) 
                 Assert.That(page, Is.Not.Null);
-            }
         }
 
         [Test]
@@ -47,7 +46,6 @@ namespace MvcApplication1.Tests
             Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage("test1%test2", route, markup)); //some weird invalid character
         }
 
-
         [Test]
         public void QueryingNotExistingPageResultsInNotFoundResponse()
         {
@@ -57,14 +55,9 @@ namespace MvcApplication1.Tests
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.PageNotFound));
         }
-
-        public void Test2()
-        {
-            
-        }
     }
 
-    public abstract class GivenCmsEngineContext : BddUnitTestBase
+    public abstract class GivenCmsServicesContext : BddUnitTestBase
     {
         protected CmsFrontendService    _cmsFrontendService;
         protected CmsBackendService     _cmsBackendService;
@@ -78,15 +71,15 @@ namespace MvcApplication1.Tests
             {
                 FormsCookieIsAlwaysValid = true, //faking forms authentication
                 MvcRequestContext = _mvcRequestContextMock
-            }); 
-            _container.RegisterType<InMemoryContentManager>(new SingletonLifetimeManager());
+            });
+            _container.RegisterType<ContentService>(new SingletonLifetimeManager());
 
             _cmsFrontendService = _container.Resolve<CmsFrontendService>();
             _cmsBackendService = _container.Resolve<CmsBackendService>();
-            _cmsBackendService.ContentUpdated += () => _cmsFrontendService.UpdateContentFiles(); //simulating content updater from admin side
+            _cmsBackendService.ContentChanged += () => _cmsFrontendService.UpdateContentFiles(); //simulating content updater from admin side
         }
 
-        protected Page CreateTestPage()
+        protected ContentItem<PageData> CreateTestPage()
         {
             var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
             var routePattern = string.Format("http://test.com/en-gb/{0}", RandomHelper.GetRandomString());
@@ -95,10 +88,12 @@ namespace MvcApplication1.Tests
             return _cmsBackendService.CreatePage(name, routePattern, markup);
         }
 
-        protected IEnumerable<Page> CreateMultipleTestPages()
+        protected IEnumerable<ContentItem<PageData>> CreateMultipleTestPages()
         {
+            var result = new List<ContentItem<PageData>>();
             for (var i = 0; i < 10; i++)
-                yield return CreateTestPage();
+                result.Add(CreateTestPage());
+            return result;
         }
 
         protected string GenerateValidMarkup()

@@ -5,18 +5,19 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Security;
+using FCG.RegoCms;
 using MvcApplication1.Models;
 
 namespace MvcApplication1.Controllers
 {
     public class CmsController : Controller
     {
-        private readonly CmsFrontendService              _cmsEngine;
+        private readonly CmsFrontendService     _cmsFrontendService;
         private readonly MvcApplicationContext  _mvcApplicationContext;
 
-        public CmsController(CmsFrontendService cmsEngine, MvcApplicationContext mvcApplicationContext)
+        public CmsController(CmsFrontendService cmsFrontendService, MvcApplicationContext mvcApplicationContext)
         {
-            _cmsEngine = cmsEngine;
+            _cmsFrontendService = cmsFrontendService;
             _mvcApplicationContext = mvcApplicationContext;
         }
 
@@ -25,7 +26,7 @@ namespace MvcApplication1.Controllers
         {
             _mvcApplicationContext.SaveCurrentRequestContext(new MvcRequestContext(ControllerContext, ViewData, TempData));
 
-            var response = _cmsEngine.ProcessRequest(Request.Url);
+            var response = _cmsFrontendService.ProcessRequest(Request.Url);
             switch (response.Type)
             {
                 case ResponseType.OK:
@@ -46,7 +47,7 @@ namespace MvcApplication1.Controllers
         [HttpPost]
         public ActionResult UpdateContentFiles()
         {
-            _cmsEngine.UpdateContentFiles();
+            _cmsFrontendService.UpdateContentFiles();
             return new HttpStatusCodeResult(HttpStatusCode.OK); 
         }
 

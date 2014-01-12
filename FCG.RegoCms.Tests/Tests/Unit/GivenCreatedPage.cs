@@ -4,9 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Web;
-using System.Web.Mvc;
+using FCG.RegoCms;
 using Microsoft.Practices.Unity;
-using Moq;
 using MvcApplication1.Models;
 using MvcApplication1.Models.Domain;
 using MvcApplication1.Models.Infrastructure;
@@ -88,7 +87,7 @@ namespace MvcApplication1.Tests
         }
     }
 
-    public abstract class GivenCreatedPageContext : GivenCmsEngineContext
+    public abstract class GivenCreatedPageContext : GivenCmsServicesContext
     {
         protected Page _page;
 

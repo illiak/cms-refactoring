@@ -1,9 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MvcApplication1", "MvcApplication1\MvcApplication1.csproj", "{5C2892AD-D7BA-4710-82FA-0B77A7ACBFA3}"
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FCG.RegoCms.Frontend", "MvcApplication1\FCG.RegoCms.Frontend.csproj", "{5C2892AD-D7BA-4710-82FA-0B77A7ACBFA3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MvcIntegrationTestFramework", "MvcIntegrationTestFramework\MvcIntegrationTestFramework.csproj", "{109BC898-C9E2-4353-8907-CA2EFCC5E682}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FCG.RegoCms.Tests", "FCG.RegoCms.Tests\FCG.RegoCms.Tests.csproj", "{FCCC2177-C89E-403C-87BB-EDE992B140E4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{0FD7CA5F-1B5C-4043-B409-5AFAFF90C6C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,8 +30,17 @@ Global
 		{109BC898-C9E2-4353-8907-CA2EFCC5E682}.Nightly|Any CPU.Build.0 = Nightly|Any CPU
 		{109BC898-C9E2-4353-8907-CA2EFCC5E682}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{109BC898-C9E2-4353-8907-CA2EFCC5E682}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCCC2177-C89E-403C-87BB-EDE992B140E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCCC2177-C89E-403C-87BB-EDE992B140E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCCC2177-C89E-403C-87BB-EDE992B140E4}.Nightly|Any CPU.ActiveCfg = Release|Any CPU
+		{FCCC2177-C89E-403C-87BB-EDE992B140E4}.Nightly|Any CPU.Build.0 = Release|Any CPU
+		{FCCC2177-C89E-403C-87BB-EDE992B140E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCCC2177-C89E-403C-87BB-EDE992B140E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{109BC898-C9E2-4353-8907-CA2EFCC5E682} = {0FD7CA5F-1B5C-4043-B409-5AFAFF90C6C2}
 	EndGlobalSection
 EndGlobal

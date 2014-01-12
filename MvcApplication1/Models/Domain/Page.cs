@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using FCG.RegoCms;
 using MvcApplication1.Models.Domain;
 using NUnit.Framework;
 
@@ -10,44 +11,15 @@ namespace MvcApplication1.Models
 {
     public class Page
     {
-        private readonly Guid                   _id;
-        private readonly InMemoryContentManager _contentManager;
+        private readonly Func<PageData, ContentItem<PageData>> _contentItemFactory;
+        private ContentItem<PageData>   _contentItem; 
 
-        public Action PageChanged;
-
-        public Page(CreatePageData createPageData,  InMemoryContentManager contentManager)
-            : this(contentManager)
+        public Page(Func<PageData, ContentItem<PageData>> contentItemFactory)
         {
-            _id = Guid.NewGuid();
-            Create(createPageData);
-        }
-        
-        internal Page(Guid id, InMemoryContentManager contentManager)
-            : this(contentManager)
-        {
-            _id = id;
+            _contentItemFactory = contentItemFactory;
         }
 
-        private Page(InMemoryContentManager contentManager)
-        {
-            _contentManager = contentManager;
-        }
-
-        public Guid                 Id { get { return _id; } }
-        public PageData             DataDraft { get { return _contentManager.GetContentItem<PageData>(_id).ContentDraft; } }
-        public PageData             DataPublished { get { return _contentManager.GetContentItem<PageData>(_id).ContentPublished; } }
-        public ContentItemStatus    Status { get { return _contentManager.GetContentItem<PageData>(_id).Status; } }
-
-        public ContentItem<PageData>        ContentItem 
-        {
-            get { return _contentManager.GetContentItem<PageData>(_id); }
-        }
-        public ContentItemVersion<PageData> LastVersion 
-        {
-            get { return _contentManager.GetLastVersion<PageData>(_id); }
-        }
-
-        void Create(CreatePageData createPageData)
+        public void Create(CreatePageData createPageData)
         {
             if (string.IsNullOrEmpty(createPageData.Name) || createPageData.Name.Length > 40)
                 throw new ApplicationException("Please enter a page name. Must be between 1 and 40 characters long.");
@@ -72,28 +44,28 @@ namespace MvcApplication1.Models
                 ViewPath = string.Format("{0}.cshtml", _id)
             };
 
-            _contentManager.Create<PageData>(_id, data);
+            _contentItem = _contentItemFactory(data);
         }
 
         public void Publish()
         {
-            _contentManager.Publish(_id);
+            _contentService.Publish(_id);
             PageChanged();
         }
 
         public void Delete()
         {
-            _contentManager.Delete(_id);
+            _contentService.Delete(_id);
             PageChanged();
         } 
 
         public void Update(UpdatePageData updatePageData)
         {
-            var contentItem = _contentManager.GetContentItem<PageData>(_id);
+            var contentItem = _contentService.GetContentItem<PageData>(_id);
             var contentToUpdate = contentItem.ContentDraft ?? contentItem.ContentPublished;
             var clonedContentToUpdate = contentToUpdate.Clone(); //make sure that published version will not be changed by a chance
 
-            _contentManager.Update<PageData>(_id, new PageData
+            _contentService.Update<PageData>(_id, new PageData
             {
                 Id = _id,
                 Markup = updatePageData.Markup, 
@@ -107,21 +79,21 @@ namespace MvcApplication1.Models
 
     public class PageFactory
     {
-        private readonly InMemoryContentManager _contentManager;
+        private readonly ContentService _contentService;
 
-        public PageFactory(InMemoryContentManager contentManager)
+        public PageFactory(ContentService contentService)
         {
-            _contentManager = contentManager;
+            _contentService = contentService;
         }
 
         public Page Create(CreatePageData createPageData)
         {
-            return new Page(createPageData,  _contentManager);
+            return new Page(createPageData,  _contentService);
         }
 
         public Page Create(Guid id)
         {
-            return new Page(id, _contentManager);
+            return new Page(id, _contentService);
         }
     }
 
