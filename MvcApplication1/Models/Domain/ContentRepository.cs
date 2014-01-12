@@ -14,13 +14,13 @@ namespace FCG.RegoCms
     {
         public Guid             Id { get; set; }
         public ContentStatus    Status { get; internal set; }
-        public Guid             DraftVersionId { get; set; }
-        public Guid             PublishedVersionId { get; set; }
+        public Guid?            DraftVersionId { get; set; }
+        public Guid?            PublishedVersionId { get; set; }
     }
 
     public class ViewVersionData
     {
-        public ViewVersionData(ContentItemVersion<Page> pageVersion)
+        public ViewVersionData(ContentItemVersion<PageData> pageVersion)
         {
             Id = pageVersion.Id;
             VersionType = pageVersion.Type;

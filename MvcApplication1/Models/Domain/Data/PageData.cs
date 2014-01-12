@@ -2,7 +2,7 @@ using System;
 
 namespace MvcApplication1.Models
 {
-    public class Page
+    public class PageData
     {
         public Guid   Id { get; internal set; }
         public string Name { get; internal set; }
@@ -13,13 +13,13 @@ namespace MvcApplication1.Models
         public string Markup { get; internal set; }
         public string ViewPath { get; internal set; }
 
-        public Page Clone()
+        public PageData Clone()
         {
-            return (Page)MemberwiseClone();
+            return (PageData)MemberwiseClone();
         }
     }
 
-    public class Layout
+    public class LayoutData
     {
         public Guid     Id { get; internal set; }
         public string   Name { get; internal set; }
@@ -28,13 +28,13 @@ namespace MvcApplication1.Models
         public string   Markup { get; internal set; }
         public string   ViewPath { get; internal set; }
 
-        public Layout Clone()
+        public LayoutData Clone()
         {
-            return (Layout)MemberwiseClone();
+            return (LayoutData)MemberwiseClone();
         }
     }
 
-    public class Fragment 
+    public class FragmentData
     {
         public Guid     Id { get; internal set; }
         public string   Name { get; internal set; }
@@ -43,9 +43,9 @@ namespace MvcApplication1.Models
         public string   Markup { get; internal set; }
         public string   ViewPath { get; internal set; }
 
-        public Layout Clone()
+        public LayoutData Clone()
         {
-            return (Layout)MemberwiseClone();
+            return (LayoutData)MemberwiseClone();
         }
     }
 }

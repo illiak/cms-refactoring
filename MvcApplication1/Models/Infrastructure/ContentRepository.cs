@@ -4,9 +4,9 @@ namespace MvcApplication1.Models
 {
     public class ContentRepository
     {
-        private static readonly List<Page> _pages = new List<Page>();
+        private static readonly List<PageData> _pages = new List<PageData>();
         
-        public List<Page> Pages {
+        public List<PageData> Pages {
             get { return _pages; }
         }
 

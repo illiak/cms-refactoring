@@ -7,7 +7,7 @@ namespace MvcApplication1.Tests
 {
     public class GivenMultipleCreatedPages : GivenCreatedPageContext
     {
-        protected IEnumerable<ContentItem<Page>> _pages;
+        protected IEnumerable<ContentItem<PageData>> _pages;
 
         protected override void Given()
         {

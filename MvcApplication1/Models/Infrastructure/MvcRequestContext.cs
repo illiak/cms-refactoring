@@ -26,7 +26,7 @@ namespace MvcApplication1.Models
             _tempData = tempData;
         }
 
-        public virtual StringBuilder RenderPageContentItemVersion(ContentItemVersion<Page> pageContentItemVersion, object model = null)
+        public virtual StringBuilder RenderPageContentItemVersion(ContentItemVersion<PageData> pageContentItemVersion, object model = null)
         {
             _viewData.Model = model;
             using (var writer = new StringWriter())

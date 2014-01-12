@@ -170,10 +170,10 @@
     </Compile>
     <Compile Include="Models\Domain\CmsBackendService.cs" />
     <Compile Include="Models\Domain\CmsFrontendService.cs" />
-    <None Include="Models\Domain\ContentManager.cs" />
     <Compile Include="Models\Domain\ContentRepository.cs" />
     <Compile Include="Models\Domain\Data\CreatePageData.cs" />
     <Compile Include="Models\Domain\Data\PageData.cs" />
+    <Compile Include="Models\Domain\Page.cs" />
     <Compile Include="Models\Infrastructure\ContentRepository.cs" />
     <Compile Include="Models\Domain\Language.cs" />
     <Compile Include="Models\Infrastructure\MvcApplicationContext.cs" />

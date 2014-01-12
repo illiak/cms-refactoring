@@ -18,15 +18,15 @@ namespace MvcApplication1.Tests
         [Test]
         public void ItsDataInitializedProperly()
         {
-            Assert.That(_page.DataDraft.Name, Is.Not.Empty);
-            Assert.That(_page.DataDraft.Markup, Is.Not.Empty);
-            Assert.That(_page.DataDraft.RoutePattern, Is.Not.Empty);
+            Assert.That(_page.DraftData.Name, Is.Not.Empty);
+            Assert.That(_page.DraftData.Markup, Is.Not.Empty);
+            Assert.That(_page.DraftData.RoutePattern, Is.Not.Empty);
         }
 
         [Test]
         public void CanGetLastVersion()
         {
-            Assert.That(_page.LastVersion, Is.Not.Null);
+            Assert.That(_page.LastData, Is.Not.Null);
         }
 
         [Test]
@@ -36,7 +36,7 @@ namespace MvcApplication1.Tests
             _mvcRequestContextMock.HasDraftCookie = true;
             _cmsFrontendService.UpdateContentFiles();
 
-            var response = _cmsFrontendService.ProcessRequest(_page.DataDraft.RoutePattern);
+            var response = _cmsFrontendService.ProcessRequest(_page.DraftData.RoutePattern);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.OK));
             Assert.That(response.Body, Is.Not.Empty);
@@ -46,16 +46,16 @@ namespace MvcApplication1.Tests
         public void ItCanBePublishedAndViewed()
         {
             _page.Publish();
-            var response = _cmsFrontendService.ProcessRequest(_page.DataPublished.RoutePattern);
+            var response = _cmsFrontendService.ProcessRequest(_page.PublishedData.RoutePattern);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.OK));
             Assert.That(response.Body, Is.Not.Empty);
         }
 
         [Test]
-        public void ItsInDraftStatus()
+        public void ItsLastVersionIsDraft()
         {
-            Assert.That(_page.Status, Is.EqualTo(ContentStatus.Draft));
+            Assert.That(_page.LastVersion.Type, Is.EqualTo(ContentVersionType.Draft));
         }
 
         [Test, Ignore]
@@ -65,7 +65,7 @@ namespace MvcApplication1.Tests
 
             _mvcRequestContextMock.HasAdminCookie = true;
             _mvcRequestContextMock.HasDraftCookie = true;
-            var response = _cmsFrontendService.ProcessRequest(_page.DataDraft.RoutePattern);
+            var response = _cmsFrontendService.ProcessRequest(_page.DraftData.RoutePattern);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.PageNotFound));
         }
@@ -82,8 +82,8 @@ namespace MvcApplication1.Tests
 
             _page.Update(updateData);
 
-            Assert.That(_page.Status, Is.EqualTo(ContentStatus.Draft));
-            Assert.That(updateData.Route, Is.EqualTo(_page.DataDraft.RoutePattern));
+            Assert.That(_page.LastVersion.Type, Is.EqualTo(ContentVersionType.Draft));
+            Assert.That(updateData.Route, Is.EqualTo(_page.DraftData.RoutePattern));
         }
     }
 

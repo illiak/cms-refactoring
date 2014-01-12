@@ -57,10 +57,10 @@
     <Compile Include="Tests\Unit\ContentServiceTests\GivenCreatedContentItem.cs" />
     <Compile Include="Tests\Unit\ContentServiceTests\GivenMultipleContentItems.cs" />
     <Compile Include="Tests\Unit\ContentServiceTests\GivenPublishedContentItem.cs" />
-    <Compile Include="Tests\Unit\GivenCmsServices.cs" />
-    <Compile Include="Tests\Unit\GivenCreatedAndUpdatedPage.cs" />
-    <Compile Include="Tests\Unit\GivenCreatedPage.cs" />
-    <Compile Include="Tests\Unit\GivenMultipleCreatedPages.cs" />
+    <Compile Include="Tests\Unit\CmsServicesTests\GivenCmsServices.cs" />
+    <Compile Include="Tests\Unit\CmsServicesTests\GivenCreatedAndUpdatedPage.cs" />
+    <Compile Include="Tests\Unit\CmsServicesTests\GivenCreatedPage.cs" />
+    <Compile Include="Tests\Unit\CmsServicesTests\GivenMultipleCreatedPages.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
