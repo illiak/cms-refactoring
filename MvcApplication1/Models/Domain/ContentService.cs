@@ -34,7 +34,7 @@ namespace FCG.RegoCms
 	    {
 	        var query = _contentItems.Values.OfType<ContentItem<TContent>>();
             if (excludeDeleted)
-                query = query.Where(x => x.Status != ContentItemStatus2.Deleted);
+                query = query.Where(x => x.Status != ContentStatus.Deleted);
 
             return query.ToArray();
 	    }
@@ -66,30 +66,41 @@ namespace FCG.RegoCms
 	{
 		internal ContentItem(Func<TContent, Guid> keySelector, TContent draft, TContent published = null)
 		{
+            Id = keySelector(draft);
             Draft = new ContentItemVersion<TContent>(keySelector, draft);
             if (published != null)
                 Published = new ContentItemVersion<TContent>(keySelector, published);
-		    CreatedOn = DateTimeOffset.Now;
 		}
 
+	    public Guid                         Id { get; private set; }
 	    public ContentItemVersion<TContent> Draft { get; private set; }
         public ContentItemVersion<TContent> Published { get; private set; }
         public ContentItemVersion<TContent> Last { get { return Draft ?? Published; } }
 
-	    public ContentItemStatus2 Status {
+	    public ContentStatus        Status {
 	        get
 	        {
-                if (   (Draft != null && Draft.Status == ContentItemStatus2.Active)
-                    || (Published != null && Published.Status == ContentItemStatus2.Active))
+                if (   (Draft != null && Draft.Status == ContentStatus.Active)
+                    || (Published != null && Published.Status == ContentStatus.Active))
                 { 
-                    return ContentItemStatus2.Active;
+                    return ContentStatus.Active;
                 }
-	            return ContentItemStatus2.Deleted;
+	            return ContentStatus.Deleted;
 	        }
 	    }
-	    public DateTimeOffset   CreatedOn { get; private set; }
-        public DateTimeOffset?  ModifiedOn { get; private set; }
-        public DateTimeOffset?  PublishedOn { get; private set; }
+	    public DateTimeOffset       CreatedOn 
+        {
+	        get
+	        {
+	            return Draft != null ? Draft.CreatedOn : Published.CreatedOn;
+	        }
+	    }
+        public DateTimeOffset?      ModifiedOn {
+            get { return Last.ModifiedOn; }
+        }
+        public DateTimeOffset?      PublishedOn {
+            get { return Published != null ? Published.ModifiedOn : null; }
+        }
 
 		internal static ContentItem<TContent> Create(Func<TContent, Guid> keySelector, TContent content)
 		{
@@ -107,7 +118,6 @@ namespace FCG.RegoCms
             {
                 updated.Draft = Published.Update(updateFunc);
             }
-            updated.ModifiedOn = DateTimeOffset.Now;
 
             return updated;
         }
@@ -118,9 +128,6 @@ namespace FCG.RegoCms
 
             published.Published = Draft.Publish();
             published.Draft = null;
-            var now = DateTimeOffset.Now;
-            published.ModifiedOn = now;
-            published.PublishedOn = now;
 
 		    return published;
 		}
@@ -138,27 +145,30 @@ namespace FCG.RegoCms
 
         public ContentItemVersion(Func<TContent, Guid> keySelector, TContent content)
         {
+            Id = Guid.NewGuid();
             _keySelector = keySelector;
             Content = content;
         }
 
-	    public Guid                     Id { get { return _keySelector(Content); } }
-	    public TContent                 Content { get; internal set; }
-		public ContentItemVersionType   Type { get; internal set; }
-		public ContentItemStatus2       Status { get; internal set; }
+	    public Guid                 Id { get; private set; }
+	    public Guid                 ContentId { get { return _keySelector(Content); } }
+	    public TContent             Content { get; internal set; }
+		public ContentVersionType   Type { get; internal set; }
+		public ContentStatus        Status { get; internal set; }
 
-		public DateTimeOffset           Created { get; internal set; }
-		public DateTimeOffset           Modified { get; internal set; }
-		public DateTimeOffset           Deleted { get; internal set; }
+		public DateTimeOffset       CreatedOn { get; internal set; }
+		public DateTimeOffset?      ModifiedOn { get; internal set; }
+		public DateTimeOffset?      DeletedOn { get; internal set; }
 
         internal ContentItemVersion<TContent> Publish()
 		{
-            Contract.Requires(Type == ContentItemVersionType.Draft, "Only Draft versions can be published");
-            Contract.Requires(Status == ContentItemStatus2.Active, "Only versions with Active status can be published");
+            Contract.Requires(Type == ContentVersionType.Draft, "Only Draft versions can be published");
+            Contract.Requires(Status == ContentStatus.Active, "Only versions with Active status can be published");
 
 		    var published = Clone();
-            published.Type = ContentItemVersionType.Published;
-            published.Modified = DateTimeOffset.UtcNow;
+            published.Id = Guid.NewGuid();
+            published.Type = ContentVersionType.Published;
+            published.ModifiedOn = DateTimeOffset.UtcNow;
 
             return published;
 		}
@@ -168,20 +178,22 @@ namespace FCG.RegoCms
             Contract.Requires<ArgumentNullException>(updateFunc != null);
 
             var updated = Clone();
+            updated.Id = Guid.NewGuid();
             updateFunc(updated.Content);
-            updated.Type = ContentItemVersionType.Draft;
-            updated.Modified = DateTimeOffset.UtcNow;
+            updated.Type = ContentVersionType.Draft;
+            updated.ModifiedOn = DateTimeOffset.UtcNow;
 
             return updated;
 		}
 
         internal ContentItemVersion<TContent> Delete()
 		{
-            Contract.Requires(Status == ContentItemStatus2.Deleted, "This content version was already deleted");
-            Contract.Requires(Status == ContentItemStatus2.Active, "Only Active version can be deleted");
+            Contract.Requires(Status == ContentStatus.Deleted, "This content version was already deleted");
+            Contract.Requires(Status == ContentStatus.Active, "Only Active version can be deleted");
 
             var deleted = Clone();
-            deleted.Status = ContentItemStatus2.Deleted;
+            deleted.Id = Guid.NewGuid();
+            deleted.Status = ContentStatus.Deleted;
 
             return deleted;
 		}
@@ -192,7 +204,7 @@ namespace FCG.RegoCms
         }
 	}
 
-	public enum ContentItemVersionType { Draft, Published }
-	public enum ContentItemStatus2 { Active, Deleted }
+	public enum ContentVersionType { Draft, Published }
+	public enum ContentStatus { Active, Deleted }
 }
 

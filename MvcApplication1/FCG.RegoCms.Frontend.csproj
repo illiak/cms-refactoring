@@ -90,6 +90,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.Entity" />
+    <Reference Include="System.Data.Linq" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -170,6 +171,7 @@
     <Compile Include="Models\Domain\CmsBackendService.cs" />
     <Compile Include="Models\Domain\CmsFrontendService.cs" />
     <None Include="Models\Domain\ContentManager.cs" />
+    <Compile Include="Models\Domain\ContentRepository.cs" />
     <Compile Include="Models\Domain\Data\CreatePageData.cs" />
     <Compile Include="Models\Domain\Data\PageData.cs" />
     <Compile Include="Models\Infrastructure\ContentRepository.cs" />
@@ -178,7 +180,6 @@
     <Compile Include="Models\Infrastructure\SingletonLifetimeManager.cs" />
     <Compile Include="Models\Infrastructure\UrlRouter.cs" />
     <Compile Include="Models\Infrastructure\MvcRequestContext.cs" />
-    <None Include="Models\Domain\Page.cs" />
     <Compile Include="Models\Infrastructure\RandomHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Models\Domain\ContentService.cs" />

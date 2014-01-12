@@ -9,9 +9,9 @@ namespace FCG.RegoCms.Tests.ContentServiceTests
         public void AllPropertiesAreValid()
         {
             Assert.That(_createdContentItem.Draft, Is.Not.Null);
-            Assert.That(_createdContentItem.Draft.Id, Is.Not.EqualTo(default(Guid)));
-            Assert.That(_createdContentItem.Draft.Type, Is.EqualTo(ContentItemVersionType.Draft));
-            Assert.That(_createdContentItem.Draft.Status, Is.EqualTo(ContentItemStatus2.Active));
+            Assert.That(_createdContentItem.Draft.ContentId, Is.Not.EqualTo(default(Guid)));
+            Assert.That(_createdContentItem.Draft.Type, Is.EqualTo(ContentVersionType.Draft));
+            Assert.That(_createdContentItem.Draft.Status, Is.EqualTo(ContentStatus.Active));
             Assert.That(_createdContentItem.Draft.Content, Is.Not.Null);
 
             Assert.That(_createdContentItem.Published, Is.Null);
@@ -32,7 +32,7 @@ namespace FCG.RegoCms.Tests.ContentServiceTests
                     x.Markup = "updated markup";
                 });
 
-                Assert.That(updated.Last.Type, Is.EqualTo(ContentItemVersionType.Draft));
+                Assert.That(updated.Last.Type, Is.EqualTo(ContentVersionType.Draft));
             });
         }
 

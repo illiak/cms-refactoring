@@ -79,7 +79,7 @@ namespace MvcApplication1.Tests
             _cmsBackendService.ContentChanged += () => _cmsFrontendService.UpdateContentFiles(); //simulating content updater from admin side
         }
 
-        protected ContentItem<PageData> CreateTestPage()
+        protected ContentItem<Page> CreateTestPage()
         {
             var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
             var routePattern = string.Format("http://test.com/en-gb/{0}", RandomHelper.GetRandomString());
@@ -88,9 +88,9 @@ namespace MvcApplication1.Tests
             return _cmsBackendService.CreatePage(name, routePattern, markup);
         }
 
-        protected IEnumerable<ContentItem<PageData>> CreateMultipleTestPages()
+        protected IEnumerable<ContentItem<Page>> CreateMultipleTestPages()
         {
-            var result = new List<ContentItem<PageData>>();
+            var result = new List<ContentItem<Page>>();
             for (var i = 0; i < 10; i++)
                 result.Add(CreateTestPage());
             return result;
@@ -113,7 +113,7 @@ namespace MvcApplication1.Tests
             public bool HasDraftCookie;
             public bool HasAdminCookie;
 
-            public override StringBuilder RenderPageContentItemVersion(ContentItemVersion<PageData> pageContentItemVersion, object model = null)
+            public override StringBuilder RenderPageContentItemVersion(ContentItemVersion<Page> pageContentItemVersion, object model = null)
             {
                 return new StringBuilder(string.Format("<rendered>{0}</rendered>", pageContentItemVersion.Content.Markup));
             }

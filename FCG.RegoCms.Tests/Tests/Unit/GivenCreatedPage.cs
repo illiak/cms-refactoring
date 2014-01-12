@@ -55,7 +55,7 @@ namespace MvcApplication1.Tests
         [Test]
         public void ItsInDraftStatus()
         {
-            Assert.That(_page.Status, Is.EqualTo(ContentItemStatus.Draft));
+            Assert.That(_page.Status, Is.EqualTo(ContentStatus.Draft));
         }
 
         [Test, Ignore]
@@ -82,7 +82,7 @@ namespace MvcApplication1.Tests
 
             _page.Update(updateData);
 
-            Assert.That(_page.Status, Is.EqualTo(ContentItemStatus.Draft));
+            Assert.That(_page.Status, Is.EqualTo(ContentStatus.Draft));
             Assert.That(updateData.Route, Is.EqualTo(_page.DataDraft.RoutePattern));
         }
     }

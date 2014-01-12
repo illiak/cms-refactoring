@@ -16,8 +16,8 @@ namespace FCG.RegoCms
     public class CmsFrontendService
     {
         private readonly MvcApplicationContext  _mvcApplicationContext;
-        private readonly UrlRouter<PageData>    _releaseUrlRouter;
-        private readonly UrlRouter<PageData>    _draftUrlRouter;
+        private readonly UrlRouter<Page>    _releaseUrlRouter;
+        private readonly UrlRouter<Page>    _draftUrlRouter;
         private readonly ContentService _contentService;
         
         public const string AdminFormsCookieName = "CmsAdminFormsAuth";
@@ -28,8 +28,8 @@ namespace FCG.RegoCms
         {
             _mvcApplicationContext = mvcApplicationContext;
             _contentService = contentService;
-            _releaseUrlRouter = new UrlRouter<PageData>();
-            _draftUrlRouter = new UrlRouter<PageData>();
+            _releaseUrlRouter = new UrlRouter<Page>();
+            _draftUrlRouter = new UrlRouter<Page>();
         }
 
         public void UpdateContentFiles()
@@ -40,7 +40,7 @@ namespace FCG.RegoCms
             var draftsDirectory = viewsDirectory.CreateSubdirectory("Draft");
             ClearDirectory(draftsDirectory);
 
-            var draftContentItems = _contentService.GetContentItems<PageData>().Select(x => x.Last);
+            var draftContentItems = _contentService.GetContentItems<Page>().Select(x => x.Last);
             _draftUrlRouter.UnregisterAll();
             foreach (var draftPageDataItem in draftContentItems)
             {
@@ -51,7 +51,7 @@ namespace FCG.RegoCms
 
             var publishedDirectory = viewsDirectory.CreateSubdirectory("Published");
             ClearDirectory(publishedDirectory);
-            var publishedPageDataItems = _contentService.GetContentItems<PageData>().Select(x => x.Published);
+            var publishedPageDataItems = _contentService.GetContentItems<Page>().Select(x => x.Published);
             _releaseUrlRouter.UnregisterAll();
             foreach (var publishedPageDataItem in publishedPageDataItems)
             {
@@ -114,7 +114,7 @@ namespace FCG.RegoCms
 
             var pageData = match.Routable;
 
-            var contentItem = _contentService.GetContentItem<PageData>(pageData.Id);
+            var contentItem = _contentService.GetContentItem<Page>(pageData.Id);
             var pageContentItemVersion = showDrafts ? contentItem.Last : contentItem.Published;
 
             var pageHtmlBuilder = mvcRequestContext.RenderPageContentItemVersion(

@@ -9,11 +9,13 @@ namespace FCG.RegoCms
 {
     public class CmsBackendService
     {
-        private readonly ContentService _contentService;
+        private readonly ContentService             _contentService;
+        private readonly Func<ContentRepository>    _repositoryFactory;
 
-        public CmsBackendService(ContentService contentService)
+        public CmsBackendService(ContentService contentService, Func<ContentRepository> repositoryFactory)
         {
             _contentService = contentService;
+            _repositoryFactory = repositoryFactory;
 
             ContentChanged += () => {}; //so we don't check for null each time we firing it
         }
@@ -25,12 +27,12 @@ namespace FCG.RegoCms
             return new[] { new Language { Code = "en-gb", Name = "English" } };
         }
 
-        public ContentItem<PageData> CreatePage(string name, string route, string markup)
+        public ContentItem<Page> CreatePage(string name, string route, string markup)
         {
             return CreatePage(new CreatePageData { Name = name, Markup = markup, Route = route });
         }
 
-        public ContentItem<PageData> CreatePage(CreatePageData createPageData)
+        public ContentItem<Page> CreatePage(CreatePageData createPageData)
         {
             if (string.IsNullOrEmpty(createPageData.Name) || createPageData.Name.Length > 40)
                 throw new ApplicationException("Please enter a page name. Must be between 1 and 40 characters long.");
@@ -47,7 +49,7 @@ namespace FCG.RegoCms
             if (!isValidRoutePattern) throw new ApplicationException("Route pattern is not valid, make sure its absolute and not relative"); //relative patterns are not supported for now
 
             var id = Guid.NewGuid();
-            var data = new PageData
+            var data = new Page
             {
                 Id = id,
                 Markup = createPageData.Markup,
@@ -55,18 +57,35 @@ namespace FCG.RegoCms
                 RoutePattern = createPageData.Route,
                 ViewPath = string.Format("{0}.cshtml", id)
             };
-            var result = _contentService.Create(data);
+            var contentItem = _contentService.Create(data);
+
+            using (var repository = _repositoryFactory())
+            {
+                repository.ContentItems.Add(new ContentItemData
+                {
+                    Id = contentItem.Id,
+                    DraftVersionId = contentItem.Draft.Id,
+                    PublishedVersionId = contentItem.Published.Id,
+                    Status = contentItem.Status
+                });
+                if (contentItem.Draft != null)
+                    repository.ViewVersions.Add(new ViewVersionData(contentItem.Draft));
+                if (contentItem.Published != null)
+                    repository.ViewVersions.Add(new ViewVersionData(contentItem.Published));
+
+                repository.SaveChanges();
+            }
 
             ContentChanged();
-            return result;
+            return contentItem;
         }
 
-        public ContentItem<PageData> GetPage(Guid id)
+        public ContentItem<Page> GetPage(Guid id)
         {
-            return _pageFactory.Create(id);
+            throw new NotImplementedException();
         }
 
-        public ContentItem<PageData>[] GetPages()
+        public ContentItem<Page>[] GetPages()
         {
             throw new NotImplementedException();
         }

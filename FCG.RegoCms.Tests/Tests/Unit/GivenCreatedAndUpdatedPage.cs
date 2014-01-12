@@ -26,7 +26,7 @@ namespace MvcApplication1.Tests
         [Test]
         public void ItsStatusBecomesDraft()
         {
-            Assert.That(_page.Status, Is.EqualTo(ContentItemStatus.Draft));
+            Assert.That(_page.Status, Is.EqualTo(ContentStatus.Draft));
         }
 
         [Test]

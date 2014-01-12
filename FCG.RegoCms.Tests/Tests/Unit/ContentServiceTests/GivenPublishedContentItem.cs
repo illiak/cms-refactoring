@@ -10,7 +10,7 @@ namespace FCG.RegoCms.Tests.ContentServiceTests
         public void ItsPropertiesAreValid()
         {
             Assert.That(_publishedContentItem.Last, Is.EqualTo(_publishedContentItem.Published));
-            Assert.That(_publishedContentItem.Last.Type, Is.EqualTo(ContentItemVersionType.Published));
+            Assert.That(_publishedContentItem.Last.Type, Is.EqualTo(ContentVersionType.Published));
             Assert.That(_publishedContentItem.Draft, Is.Null);
 
             Assert.That(_publishedContentItem.ModifiedOn, Is.Not.EqualTo(_createdContentItem.ModifiedOn));

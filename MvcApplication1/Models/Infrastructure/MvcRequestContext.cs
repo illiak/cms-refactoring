@@ -26,12 +26,12 @@ namespace MvcApplication1.Models
             _tempData = tempData;
         }
 
-        public virtual StringBuilder RenderPageContentItemVersion(ContentItemVersion<PageData> pageContentItemVersion, object model = null)
+        public virtual StringBuilder RenderPageContentItemVersion(ContentItemVersion<Page> pageContentItemVersion, object model = null)
         {
             _viewData.Model = model;
             using (var writer = new StringWriter())
             {
-                var versionFolderName = pageContentItemVersion.Type == ContentItemVersionType.Draft ? "Draft/" : "Published/";
+                var versionFolderName = pageContentItemVersion.Type == ContentVersionType.Draft ? "Draft/" : "Published/";
                 var pageVirtualPath = "~/Views/" + versionFolderName + pageContentItemVersion.Content.ViewPath;
                 var viewResult = ViewEngines.Engines.FindPartialView(_controllerContext, pageVirtualPath);
 
