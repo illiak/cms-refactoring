@@ -58,6 +58,13 @@ namespace FCG.RegoCms.Tests.Unit.CmsServicesTests
             Assert.That(_page.LastVersion.Type, Is.EqualTo(ContentVersionType.Draft));
         }
 
+        [Test]
+        public void ItsInstanceCouldBeRetrieved()
+        {
+            var page = _cmsService.GetPage(_page.Id);
+            Assert.That(page, Is.Not.Null);
+        }
+
         [Test, Ignore]
         public void ItCanBeDeletedAndNoLongerAccessible()
         {

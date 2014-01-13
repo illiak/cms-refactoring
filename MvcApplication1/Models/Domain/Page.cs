@@ -24,6 +24,7 @@ namespace FCG.RegoCms
             _initialized = false;
         }
 
+        public Guid     Id { get { return _contentItem.Id; } }
         public PageData DraftData { get { return _contentItem.Draft != null ? _contentItem.Draft.Content : null; } }
         public PageData PublishedData { get { return _contentItem.Published != null ? _contentItem.Published.Content : null; } }
         public PageData LastData { get { return _contentItem.Last.Content; } }

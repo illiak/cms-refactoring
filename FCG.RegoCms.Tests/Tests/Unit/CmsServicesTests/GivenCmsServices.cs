@@ -38,13 +38,13 @@ namespace FCG.RegoCms.Tests.Unit.CmsServicesTests
             var markup = GenerateValidMarkup();
             var route = GenerateValidRoute();
 
-            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage(string.Empty, route, markup));
-            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage("/test", route, markup));
-            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage("test/", route, markup));
-            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage("test1//test2", route, markup));
-            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage("test1///test2", route, markup));
-            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage("test1 test2", route, markup));
-            Assert.Throws<ApplicationException>(() => _cmsBackendService.CreatePage("test1%test2", route, markup)); //some weird invalid character
+            Assert.Throws<ApplicationException>(() => _cmsService.CreatePage(string.Empty, route, markup));
+            Assert.Throws<ApplicationException>(() => _cmsService.CreatePage("/test", route, markup));
+            Assert.Throws<ApplicationException>(() => _cmsService.CreatePage("test/", route, markup));
+            Assert.Throws<ApplicationException>(() => _cmsService.CreatePage("test1//test2", route, markup));
+            Assert.Throws<ApplicationException>(() => _cmsService.CreatePage("test1///test2", route, markup));
+            Assert.Throws<ApplicationException>(() => _cmsService.CreatePage("test1 test2", route, markup));
+            Assert.Throws<ApplicationException>(() => _cmsService.CreatePage("test1%test2", route, markup)); //some weird invalid character
         }
 
         [Test]
@@ -56,12 +56,19 @@ namespace FCG.RegoCms.Tests.Unit.CmsServicesTests
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.PageNotFound));
         }
+
+        [Test]
+        public void CanGetLanguages()
+        {
+            var languages = _cmsService.GetLanguages();
+            Assert.That(languages, Is.Not.Empty);
+        }
     }
 
     abstract class GivenCmsServicesContext : BddUnitTestBase
     {
         protected CmsFrontendService    _cmsFrontendService;
-        protected CmsService            _cmsBackendService;
+        protected CmsService            _cmsService;
         protected FakeMvcRequestContext _mvcRequestContextMock;
         protected FakeContentRepository _fakeContentRepository;
 
@@ -79,9 +86,9 @@ namespace FCG.RegoCms.Tests.Unit.CmsServicesTests
             _container.RegisterInstance<ContentRepository>(_fakeContentRepository);
             
             _cmsFrontendService = _container.Resolve<CmsFrontendService>();
-            _cmsBackendService = _container.Resolve<CmsService>();
+            _cmsService = _container.Resolve<CmsService>();
             
-            _cmsBackendService.ContentChanged += () => _cmsFrontendService.UpdateContentFiles(); //simulating content updater from admin side
+            _cmsService.ContentChanged += () => _cmsFrontendService.UpdateContentFiles(); //simulating content updater from admin side
         }
 
         protected Page CreateTestPage()
@@ -90,7 +97,7 @@ namespace FCG.RegoCms.Tests.Unit.CmsServicesTests
             var routePattern = string.Format("http://test.com/en-gb/{0}", RandomHelper.GetRandomString());
             var name = "testPage-" + RandomHelper.GetRandomString();
 
-            return _cmsBackendService.CreatePage(name, routePattern, markup);
+            return _cmsService.CreatePage(name, routePattern, markup);
         }
 
         protected IEnumerable<Page> CreateMultipleTestPages()

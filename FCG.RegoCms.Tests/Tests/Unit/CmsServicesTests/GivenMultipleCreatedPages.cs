@@ -22,7 +22,7 @@ namespace FCG.RegoCms.Tests.Unit.CmsServicesTests
         [Test]
         public void CanGetListOfPages()
         {
-            var pages = _cmsBackendService.GetPages();
+            var pages = _cmsService.GetPages();
             Assert.That(pages.Count(), Is.EqualTo(_pages.Count() + 1)); //adding one because one page was created before calling CreateMultipleTestPages() method
         }
     }
