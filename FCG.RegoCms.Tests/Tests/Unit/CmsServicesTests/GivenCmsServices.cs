@@ -13,7 +13,7 @@ using NUnit.Framework;
 
 namespace FCG.RegoCms.Tests.CmsServicesTests
 {
-    public class GivenCmsServices : GivenCmsServicesContext
+    class GivenCmsServices : GivenCmsServicesContext
     {
         [Test]
         public void NewPageCanBeCreated()
@@ -58,18 +58,18 @@ namespace FCG.RegoCms.Tests.CmsServicesTests
         }
     }
 
-    public abstract class GivenCmsServicesContext : BddUnitTestBase
+    abstract class GivenCmsServicesContext : BddUnitTestBase
     {
         protected CmsFrontendService    _cmsFrontendService;
         protected CmsService            _cmsBackendService;
-        protected MvcRequestContextMock _mvcRequestContextMock;
+        protected FakeMvcRequestContext _mvcRequestContextMock;
         protected FakeContentRepository _fakeContentRepository;
 
         protected override void Given()
         {
-            _mvcRequestContextMock = new MvcRequestContextMock();
+            _mvcRequestContextMock = new FakeMvcRequestContext();
             _container.RegisterInstance<MvcRequestContext>(_mvcRequestContextMock);
-            _container.RegisterInstance<MvcApplicationContext>(new MvcApplicationContextMock 
+            _container.RegisterInstance<MvcApplicationContext>(new FakeMvcApplicationContext 
             {
                 FormsCookieIsAlwaysValid = true, //faking forms authentication
                 MvcRequestContext = _mvcRequestContextMock
@@ -113,74 +113,7 @@ namespace FCG.RegoCms.Tests.CmsServicesTests
 
         #region Mocks
 
-        protected class MvcRequestContextMock : MvcRequestContext
-        {
-            public bool HasDraftCookie;
-            public bool HasAdminCookie;
-
-            public override StringBuilder RenderPageContentItemVersion(string markupVirtualPath, object model = null)
-            {
-                var markupFileSystemPath = GetFileSystemTempPath(markupVirtualPath);
-                using (var reader = new FileInfo(markupFileSystemPath).OpenText())
-                {
-                    return new StringBuilder(string.Format("<rendered>{0}</rendered>", reader.ReadToEnd()));
-                }
-            }
-
-            public override string GetCookieValue(string cookieName)
-            {
-                if (cookieName == CmsFrontendService.ShowDraftsCookieName)
-                    return HasDraftCookie.ToString();
-
-                if (cookieName == CmsFrontendService.AdminFormsCookieName)
-                    return "valid cookie for admin";
-
-                throw new ApplicationException("this mock was intended for querying draft and admin cookies only");
-            }
-
-            public override bool HasCookie(string cookieName)
-            {
-                if (cookieName == CmsFrontendService.ShowDraftsCookieName)
-                    return HasDraftCookie;
-
-                if (cookieName == CmsFrontendService.AdminFormsCookieName)
-                    return HasAdminCookie;
-
-                return false;
-            }
-        }
-
-        protected class MvcApplicationContextMock : MvcApplicationContext
-        {
-            public bool FormsCookieIsAlwaysValid;
-            public MvcRequestContext MvcRequestContext;
-
-            public override string GetFileSystemPath(string virtualPath)
-            {
-                return GetFileSystemTempPath(virtualPath);
-            }
-
-            public override bool IsFormsCookieValueValid(string cookieValue)
-            {
-                if (FormsCookieIsAlwaysValid) return true;
-
-                return base.IsFormsCookieValueValid(cookieValue);
-            }
-
-            public override MvcRequestContext GetCurrentMvcRequestContext()
-            {
-                return MvcRequestContext;
-            }
-        }
-
-        protected static string GetFileSystemTempPath(string virtualPath)
-        {
-            var result = new StringBuilder(virtualPath);
-            result.Replace("~/", Path.GetTempPath());
-            result.Replace("/", "\\");
-
-            return result.ToString();
-        }
+        
 
         #endregion
     }

@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Web;
 using System.Web.Hosting;
+using System.Web.Mvc;
 using System.Web.Security;
 using Microsoft.Ajax.Utilities;
 
@@ -29,9 +30,9 @@ namespace MvcApplication1.Models
             return ticket != null;
         }
 
-        public void SaveCurrentRequestContext(MvcRequestContext mvcRequestContext)
+        public void SaveCurrentRequestContextData(ControllerContext controllerContext, ViewDataDictionary viewData, TempDataDictionary tempData)
         {
-            HttpContext.Current.Items["mvcRequestContext"] = mvcRequestContext;
+            HttpContext.Current.Items["mvcRequestContext"] = new MvcRequestContext(controllerContext, viewData, tempData);
         }
 
         public virtual MvcRequestContext GetCurrentMvcRequestContext()
@@ -39,6 +40,4 @@ namespace MvcApplication1.Models
             return (MvcRequestContext)HttpContext.Current.Items["mvcRequestContext"];
         }
     }
-
-   
 }

@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace FCG.RegoCms.Tests.CmsServicesTests
 {
-    public class GivenCreatedAndUpdatedPage : GivenCreatedPageContext
+    class GivenCreatedAndUpdatedPage : GivenCreatedPageContext
     {
         UpdatePageData  _updateData;
 

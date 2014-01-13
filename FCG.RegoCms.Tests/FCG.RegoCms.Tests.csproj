@@ -56,11 +56,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Mocks\FakeMvcApplicationContext.cs" />
     <Compile Include="Mocks\FakeContentRepository.cs" />
     <Compile Include="Mocks\FakeDbSet.cs" />
+    <Compile Include="Mocks\FakeMvcRequestContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Bdd.cs" />
-    <Compile Include="Tests\Integration\EngineTests.cs" />
+    <Compile Include="Tests\Integration\FrontendServiceTests.cs" />
     <Compile Include="Tests\Unit\ContentItemTests\ContentItemTests.cs" />
     <Compile Include="Tests\Unit\ContentItemTests\GivenCreatedContentItem.cs" />
     <Compile Include="Tests\Unit\ContentItemTests\GivenPublishedContentItem.cs" />

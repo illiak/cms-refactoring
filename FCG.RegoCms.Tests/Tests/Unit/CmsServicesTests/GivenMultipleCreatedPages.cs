@@ -6,7 +6,7 @@ using MvcApplication1.Models;
 
 namespace FCG.RegoCms.Tests.CmsServicesTests
 {
-    public class GivenMultipleCreatedPages : GivenCreatedPageContext
+    class GivenMultipleCreatedPages : GivenCreatedPageContext
     {
         protected IEnumerable<Page> _pages;
 

@@ -59,5 +59,13 @@ namespace MvcApplication1.Models
         }
     }
 
+    public class MvcRequestContextFactory
+    {
+        public virtual MvcRequestContext Create(ControllerContext controllerContext, ViewDataDictionary viewData, TempDataDictionary tempData)
+        {
+            return new MvcRequestContext(controllerContext, viewData, tempData);
+        }
+    }
+
     
 }

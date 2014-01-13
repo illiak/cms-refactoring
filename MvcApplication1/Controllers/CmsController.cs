@@ -14,19 +14,22 @@ namespace MvcApplication1.Controllers
     {
         private readonly CmsFrontendService     _cmsFrontendService;
         private readonly MvcApplicationContext  _mvcApplicationContext;
+        private readonly MvcRequestContextFactory _mvcRequestContextFactory;
 
-        public CmsController(CmsFrontendService cmsFrontendService, MvcApplicationContext mvcApplicationContext)
+        public CmsController(CmsFrontendService cmsFrontendService, MvcApplicationContext mvcApplicationContext, MvcRequestContextFactory mvcRequestContextFactory)
         {
             _cmsFrontendService = cmsFrontendService;
             _mvcApplicationContext = mvcApplicationContext;
+            _mvcRequestContextFactory = mvcRequestContextFactory;
         }
 
         [HttpGet]
         public ActionResult ProcessRequest()
         {
-            _mvcApplicationContext.SaveCurrentRequestContext(new MvcRequestContext(ControllerContext, ViewData, TempData));
+            _mvcApplicationContext.SaveCurrentRequestContextData(ControllerContext, ViewData, TempData);
 
             var response = _cmsFrontendService.ProcessRequest(Request.Url);
+
             switch (response.Type)
             {
                 case ResponseType.OK:
@@ -50,28 +53,5 @@ namespace MvcApplication1.Controllers
             _cmsFrontendService.UpdateContentFiles();
             return new HttpStatusCodeResult(HttpStatusCode.OK); 
         }
-
-#if DEBUG
-        [HttpPost]
-        public string SimulateAdminLogin()
-        {
-            var ticket = new FormsAuthenticationTicket(1 /*version*/, "admin", DateTime.UtcNow /*issue date*/,
-                                                           DateTime.UtcNow.AddMinutes(FormsAuthentication.Timeout.TotalMinutes), true, string.Empty);
-
-            var encryptedTicket = FormsAuthentication.Encrypt(ticket);
-            var cookie = new HttpCookie(CmsFrontendService.AdminFormsCookieName, encryptedTicket) { Secure = false };
-            Response.Cookies.Add(cookie);
-
-            return "Admin login simulated";
-        }
-
-        [HttpPost]
-        public string SimulateShowDraftsMode()
-        {
-            Response.Cookies.Add(new HttpCookie(CmsFrontendService.ShowDraftsCookieName, true.ToString()));
-
-            return "Show drafts mode simulated";
-        }
-#endif
     }
 }

@@ -131,7 +131,6 @@ namespace FCG.RegoCms
             _contentItem = new ContentItem<PageData>(x => x.Id, draftData, publishedData);
 
             _initialized = true;
-            _contentChangedEvent();
         }
 
         public void Publish()

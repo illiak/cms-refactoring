@@ -13,7 +13,7 @@ using NUnit.Framework;
 
 namespace FCG.RegoCms.Tests.CmsServicesTests
 {
-    public class GivenCreatedPage : GivenCreatedPageContext
+    class GivenCreatedPage : GivenCreatedPageContext
     {
         [Test]
         public void ItsDataInitializedProperly()
@@ -87,7 +87,7 @@ namespace FCG.RegoCms.Tests.CmsServicesTests
         }
     }
 
-    public abstract class GivenCreatedPageContext : GivenCmsServicesContext
+    abstract class GivenCreatedPageContext : GivenCmsServicesContext
     {
         protected Page _page;
 
