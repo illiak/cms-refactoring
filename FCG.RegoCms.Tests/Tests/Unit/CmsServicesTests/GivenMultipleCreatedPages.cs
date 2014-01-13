@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using FCG.RegoCms;
 using MvcApplication1.Models;
 
-namespace FCG.RegoCms.Tests.CmsServicesTests
+namespace FCG.RegoCms.Tests.Unit.CmsServicesTests
 {
     class GivenMultipleCreatedPages : GivenCreatedPageContext
     {

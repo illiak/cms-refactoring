@@ -3,7 +3,7 @@ using MvcApplication1.Models;
 using MvcApplication1.Models.Domain;
 using NUnit.Framework;
 
-namespace FCG.RegoCms.Tests.CmsServicesTests
+namespace FCG.RegoCms.Tests.Unit.CmsServicesTests
 {
     class GivenCreatedAndUpdatedPage : GivenCreatedPageContext
     {

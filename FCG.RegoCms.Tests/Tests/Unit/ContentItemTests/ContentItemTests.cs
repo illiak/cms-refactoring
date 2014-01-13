@@ -2,10 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using MvcApplication1.Models.Infrastructure;
-using MvcApplication1.Tests;
 using NUnit.Framework;
 
-namespace FCG.RegoCms.Tests.ContentItemTests
+namespace FCG.RegoCms.Tests.Unit.ContentItemTests
 {
     public class ContentItemTests : ContentItemTestsContext
 	{

@@ -7,7 +7,7 @@
     <ProjectGuid>{FCCC2177-C89E-403C-87BB-EDE992B140E4}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FCG.RegoCms.Tests</RootNamespace>
+    <RootNamespace>FCG.RegoCms</RootNamespace>
     <AssemblyName>FCG.RegoCms.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

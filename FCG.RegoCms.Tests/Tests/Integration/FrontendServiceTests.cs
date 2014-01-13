@@ -8,6 +8,7 @@ using System.Web.Mvc;
 using FCG.RegoCms;
 using FCG.RegoCms.Tests.Mocks;
 using Microsoft.Practices.Unity;
+using MvcApplication1;
 using MvcApplication1.Models;
 using MvcApplication1.Models.Domain;
 using MvcApplication1.Models.Infrastructure;
@@ -15,7 +16,7 @@ using MvcIntegrationTestFramework.Browsing;
 using MvcIntegrationTestFramework.Hosting;
 using NUnit.Framework;
 
-namespace MvcApplication1.Tests.Integration
+namespace FCG.RegoCms.Tests.Integration
 {
     [TestFixture, Category("Integration")]
     public class FrontendServiceTests
@@ -32,9 +33,6 @@ namespace MvcApplication1.Tests.Integration
 
                 var page = CreateTestPage();
                 
-                //browsingSession.Post(hostAddress + "simulateAdminLogin");
-                //browsingSession.Post(hostAddress + "simulateShowDraftsMode");
-
                 var response = browsingSession.Get(page.DraftData.Route);
 
                 Assert.AreEqual(200, response.ResponseStatusCode);

@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
 
-namespace FCG.RegoCms.Tests.ContentItemTests
+namespace FCG.RegoCms.Tests.Unit.ContentItemTests
 {
     public class GivenCreatedContentItem : GivenCreatedContentItemContext
     {
