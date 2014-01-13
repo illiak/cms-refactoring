@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
 
-namespace FCG.RegoCms.Tests.ContentServiceTests
+namespace FCG.RegoCms.Tests.ContentItemTests
 {
     public class GivenCreatedContentItem : GivenCreatedContentItemContext
     {
@@ -45,16 +45,9 @@ namespace FCG.RegoCms.Tests.ContentServiceTests
                 Assert.That(published, Is.Not.Null);
             });
         }
-
-        [Test]
-        public void CanGetSingleContentItem()
-        {
-            var contentItem = _contentService.GetContentItem<SampleItem>(_newSampleItem.Id);
-            Assert.That(contentItem, Is.Not.Null);
-        }
     }
 
-    public abstract class GivenCreatedContentItemContext : GivenContentServiceContext
+    public abstract class GivenCreatedContentItemContext : ContentItemTests
     {
         protected ContentItem<SampleItem>  _createdContentItem;
         protected SampleItem                _newSampleItem;
@@ -63,7 +56,6 @@ namespace FCG.RegoCms.Tests.ContentServiceTests
         {
             base.Given();
 
-            RegisterSampleContentType();
             _newSampleItem = CreateSampleItem();
             _createdContentItem = CreateTestContentItem(_newSampleItem);
         }

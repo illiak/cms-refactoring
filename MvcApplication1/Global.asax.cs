@@ -31,9 +31,8 @@ namespace MvcApplication1
 
             DependencyResolver.SetResolver(new UnityDependencyResolver(Container));
             Container.RegisterType<CmsFrontendService>(new SingletonLifetimeManager());
-            Container.RegisterType<ContentService>(new SingletonLifetimeManager()); 
 
-            var cmsBackendService = Container.Resolve<CmsBackendService>();
+            var cmsBackendService = Container.Resolve<CmsService>();
             var cmsFrontendService = Container.Resolve<CmsFrontendService>();
             var page = cmsBackendService.CreatePage(
                 name: "test page markup", 

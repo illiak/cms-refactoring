@@ -1,13 +1,14 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using FCG.RegoCms;
 using MvcApplication1.Models;
 
-namespace MvcApplication1.Tests
+namespace FCG.RegoCms.Tests.CmsServicesTests
 {
     public class GivenMultipleCreatedPages : GivenCreatedPageContext
     {
-        protected IEnumerable<ContentItem<PageData>> _pages;
+        protected IEnumerable<Page> _pages;
 
         protected override void Given()
         {
@@ -19,6 +20,7 @@ namespace MvcApplication1.Tests
         public void CanGetListOfPages()
         {
             var pages = _cmsBackendService.GetPages();
+            throw new NotImplementedException();
         }
     }
 }

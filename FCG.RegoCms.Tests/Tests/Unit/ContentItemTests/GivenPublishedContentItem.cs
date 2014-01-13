@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using NUnit.Framework;
 
-namespace FCG.RegoCms.Tests.ContentServiceTests
+namespace FCG.RegoCms.Tests.ContentItemTests
 {
     public class GivenPublishedContentItem : GivenPublishedContentItemContext
     {

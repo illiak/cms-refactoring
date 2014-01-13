@@ -3,7 +3,7 @@ using MvcApplication1.Models;
 using MvcApplication1.Models.Domain;
 using NUnit.Framework;
 
-namespace MvcApplication1.Tests
+namespace FCG.RegoCms.Tests.CmsServicesTests
 {
     public class GivenCreatedAndUpdatedPage : GivenCreatedPageContext
     {
@@ -26,7 +26,7 @@ namespace MvcApplication1.Tests
         [Test]
         public void ItsStatusBecomesDraft()
         {
-            Assert.That(_page.Status, Is.EqualTo(ContentStatus.Draft));
+            Assert.That(_page.LastVersion.Type, Is.EqualTo(ContentVersionType.Draft));
         }
 
         [Test]
@@ -43,7 +43,7 @@ namespace MvcApplication1.Tests
 
             _mvcRequestContextMock.HasAdminCookie = true;
             _mvcRequestContextMock.HasDraftCookie = true;
-            var response = _cmsFrontendService.ProcessRequest(_page.DataDraft.RoutePattern);
+            var response = _cmsFrontendService.ProcessRequest(_page.DraftData.Route);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.OK));
         }

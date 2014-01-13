@@ -4,13 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using FCG.RegoCms;
+using FCG.RegoCms.Tests.Mocks;
 using Microsoft.Practices.Unity;
 using MvcApplication1.Models;
 using MvcApplication1.Models.Domain;
 using MvcApplication1.Models.Infrastructure;
 using NUnit.Framework;
 
-namespace MvcApplication1.Tests
+namespace FCG.RegoCms.Tests.CmsServicesTests
 {
     public class GivenCmsServices : GivenCmsServicesContext
     {
@@ -60,8 +61,9 @@ namespace MvcApplication1.Tests
     public abstract class GivenCmsServicesContext : BddUnitTestBase
     {
         protected CmsFrontendService    _cmsFrontendService;
-        protected CmsBackendService     _cmsBackendService;
+        protected CmsService            _cmsBackendService;
         protected MvcRequestContextMock _mvcRequestContextMock;
+        protected FakeContentRepository _fakeContentRepository;
 
         protected override void Given()
         {
@@ -72,10 +74,13 @@ namespace MvcApplication1.Tests
                 FormsCookieIsAlwaysValid = true, //faking forms authentication
                 MvcRequestContext = _mvcRequestContextMock
             });
-            _container.RegisterType<ContentService>(new SingletonLifetimeManager());
-
+            
+            _fakeContentRepository = new FakeContentRepository();
+            _container.RegisterInstance<ContentRepository>(_fakeContentRepository);
+            
             _cmsFrontendService = _container.Resolve<CmsFrontendService>();
-            _cmsBackendService = _container.Resolve<CmsBackendService>();
+            _cmsBackendService = _container.Resolve<CmsService>();
+            
             _cmsBackendService.ContentChanged += () => _cmsFrontendService.UpdateContentFiles(); //simulating content updater from admin side
         }
 
@@ -113,9 +118,13 @@ namespace MvcApplication1.Tests
             public bool HasDraftCookie;
             public bool HasAdminCookie;
 
-            public override StringBuilder RenderPageContentItemVersion(ContentItemVersion<PageData> pageContentItemVersion, object model = null)
+            public override StringBuilder RenderPageContentItemVersion(string markupVirtualPath, object model = null)
             {
-                return new StringBuilder(string.Format("<rendered>{0}</rendered>", pageContentItemVersion.Content.Markup));
+                var markupFileSystemPath = GetFileSystemTempPath(markupVirtualPath);
+                using (var reader = new FileInfo(markupFileSystemPath).OpenText())
+                {
+                    return new StringBuilder(string.Format("<rendered>{0}</rendered>", reader.ReadToEnd()));
+                }
             }
 
             public override string GetCookieValue(string cookieName)
@@ -138,12 +147,6 @@ namespace MvcApplication1.Tests
                     return HasAdminCookie;
 
                 return false;
-            }
-
-            public string RenderPageToString(PageData page, ContentVersionType versionType)
-            {
-                var pageMarkup = versionType == ContentVersionType.Draft ? page.DataDraft.Markup : page.DataPublished.Markup;
-                return new StringBuilder(string.Format("<rendered>{0}</rendered>", pageMarkup)).ToString();
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Management.Instrumentation;
@@ -16,20 +17,19 @@ namespace FCG.RegoCms
     public class CmsFrontendService
     {
         private readonly MvcApplicationContext  _mvcApplicationContext;
-        private readonly UrlRouter<PageData>    _releaseUrlRouter;
-        private readonly UrlRouter<PageData>    _draftUrlRouter;
-        private readonly ContentService _contentService;
+        private readonly CmsService             _cmsService;
+        private readonly UrlRouter<Page>        _releaseUrlRouter;
+        private readonly UrlRouter<Page>        _draftUrlRouter;
         
         public const string AdminFormsCookieName = "CmsAdminFormsAuth";
         public const string ShowDraftsCookieName = "CmsShowDrafts";
 
-        public CmsFrontendService(MvcApplicationContext mvcApplicationContext,
-                                  ContentService contentService)
+        public CmsFrontendService(MvcApplicationContext mvcApplicationContext, CmsService cmsService)
         {
             _mvcApplicationContext = mvcApplicationContext;
-            _contentService = contentService;
-            _releaseUrlRouter = new UrlRouter<PageData>();
-            _draftUrlRouter = new UrlRouter<PageData>();
+            _cmsService = cmsService;
+            _releaseUrlRouter = new UrlRouter<Page>();
+            _draftUrlRouter = new UrlRouter<Page>();
         }
 
         public void UpdateContentFiles()
@@ -39,35 +39,39 @@ namespace FCG.RegoCms
             //update page content files
             var draftsDirectory = viewsDirectory.CreateSubdirectory("Draft");
             ClearDirectory(draftsDirectory);
-
-            var draftContentItems = _contentService.GetContentItems<PageData>().Select(x => x.Last);
+            var pages = _cmsService.GetPages(excludeDeleted: true);
             _draftUrlRouter.UnregisterAll();
-            foreach (var draftPageDataItem in draftContentItems)
+            foreach (var page in pages)
             {
-                var viewPath = draftsDirectory.FullName + "\\" + draftPageDataItem.Content.ViewPath;
-                CreateViewFile(draftPageDataItem.Content.Markup, viewPath);
-                _draftUrlRouter.RegisterRoute(draftPageDataItem.Content.RoutePattern, draftPageDataItem.Content);
+                var lastVersionData = page.LastData;
+                var viewPath = draftsDirectory.FullName + "\\" + lastVersionData.ViewPath;
+                CreateViewFile(lastVersionData.Markup, viewPath);
+                _draftUrlRouter.RegisterRoute(lastVersionData.Route, page);
             }
 
             var publishedDirectory = viewsDirectory.CreateSubdirectory("Published");
             ClearDirectory(publishedDirectory);
-            var publishedPageDataItems = _contentService.GetContentItems<PageData>().Select(x => x.Published);
             _releaseUrlRouter.UnregisterAll();
-            foreach (var publishedPageDataItem in publishedPageDataItems)
+            foreach (var page in pages.Where(x => x.PublishedData != null))
             {
-                var viewPath = publishedDirectory.FullName + "\\" + publishedPageDataItem.Content.ViewPath;
-                CreateViewFile(publishedPageDataItem.Content.Markup, viewPath);
-                _releaseUrlRouter.RegisterRoute(publishedPageDataItem.Content.RoutePattern, publishedPageDataItem.Content);
+                var publishedVersionData = page.PublishedData;
+                var viewPath = publishedDirectory.FullName + "\\" + publishedVersionData.ViewPath;
+                CreateViewFile(publishedVersionData.Markup, viewPath);
+                _releaseUrlRouter.RegisterRoute(publishedVersionData.Route, page);
             }
         }
 
         static void ClearDirectory(DirectoryInfo directory)
         {
+            Contract.Requires(directory != null);
+
             directory.EnumerateFileSystemInfos().ForEach(DeleteFileSystemInfo);
         }
 
         static void DeleteFileSystemInfo(FileSystemInfo fsi)
         {
+            Contract.Requires(fsi != null);
+
             fsi.Attributes = FileAttributes.Normal;
             var di = fsi as DirectoryInfo;
 
@@ -94,10 +98,14 @@ namespace FCG.RegoCms
 
         public Response ProcessRequest(string url)
         {
+            Contract.Requires(url != null);
+
             return ProcessRequest(new Uri(url));
         }
         public Response ProcessRequest(Uri url)
         {
+            Contract.Requires(url != null);
+
             var mvcRequestContext = _mvcApplicationContext.GetCurrentMvcRequestContext();
 
             var showDrafts = CheckIfHasToShowDrafts(mvcRequestContext);
@@ -112,20 +120,27 @@ namespace FCG.RegoCms
             var match = urlRouter.MatchOrNull(url);
             if (match == null) return new Response { Type = ResponseType.PageNotFound };
 
-            var pageData = match.Routable;
+            var page = match.Routable;
 
-            var contentItem = _contentService.GetContentItem<PageData>(pageData.Id);
-            var pageContentItemVersion = showDrafts ? contentItem.Last : contentItem.Published;
-
-            var pageHtmlBuilder = mvcRequestContext.RenderPageContentItemVersion(
-                pageContentItemVersion: pageContentItemVersion, model: new object()
-            );
+            var pageContentItemVersion = showDrafts ? page.LastVersion : page.PublishedVersion;
+            var markupVirtualPath = GetViewVirtualPath(pageContentItemVersion);
+            var pageHtmlBuilder = mvcRequestContext.RenderPageContentItemVersion(markupVirtualPath, model: new object());
 
             return new Response { Body = pageHtmlBuilder.ToString(), Type = ResponseType.OK };
         }
 
+        private string GetViewVirtualPath(ContentItemVersion<PageData> pageContentItemVersion)
+        {
+            Contract.Requires(pageContentItemVersion != null);
+
+            var versionFolderName = pageContentItemVersion.Type == ContentVersionType.Draft ? "Draft/" : "Published/";
+            return "~/Views/" + versionFolderName + pageContentItemVersion.Content.ViewPath;
+        }
+
         bool    CheckIfRequestUserIsAdmin(MvcRequestContext mvcRequestContext)
         {
+            Contract.Requires(mvcRequestContext != null);
+
             if (!mvcRequestContext.HasCookie(AdminFormsCookieName)) return false;
 
             var cookieValue = mvcRequestContext.GetCookieValue(AdminFormsCookieName);
@@ -134,6 +149,8 @@ namespace FCG.RegoCms
         }
         bool    CheckIfHasToShowDrafts(MvcRequestContext mvcRequestContext)
         {
+            Contract.Requires(mvcRequestContext != null);
+
             if (!mvcRequestContext.HasCookie(ShowDraftsCookieName)) return false;
             var showDraftsCookieValue = mvcRequestContext.GetCookieValue(ShowDraftsCookieName);
             return bool.Parse(showDraftsCookieValue);

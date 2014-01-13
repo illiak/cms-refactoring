@@ -8,7 +8,7 @@ namespace MvcApplication1.Models
         public string Name { get; internal set; }
         public string LanguageCode { get; internal set; }
         public Guid?  LayoutId { get; internal set; }
-        public string RoutePattern { get; internal set; }
+        public string Route { get; internal set; }
         public string Title { get; internal set; }
         public string Markup { get; internal set; }
         public string ViewPath { get; internal set; }

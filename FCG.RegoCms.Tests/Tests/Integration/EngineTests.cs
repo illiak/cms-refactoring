@@ -25,7 +25,7 @@ namespace MvcApplication1.Tests.Integration
             var host = AppHost.Simulate(@"\MvcApplication1");
             host.Start(browsingSession =>
             {
-                var cmsBackendService = WebApiApplication.Container.Resolve<CmsBackendService>();
+                var cmsBackendService = WebApiApplication.Container.Resolve<CmsService>();
                 cmsBackendService.ContentChanged += () => browsingSession.Post(hostAddress + "updateContentFiles");
 
                 var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());
@@ -49,7 +49,7 @@ namespace MvcApplication1.Tests.Integration
             var host = AppHost.Simulate(@"\MvcApplication1");
             host.Start(browsingSession =>
             {
-                var cmsBackendService = WebApiApplication.Container.Resolve<CmsBackendService>();
+                var cmsBackendService = WebApiApplication.Container.Resolve<CmsService>();
                 cmsBackendService.ContentChanged += () => browsingSession.Post(hostAddress + "updateContentFiles");
 
                 var markup = string.Format("<html><body>{0}</body></html>", RandomHelper.GetRandomString());

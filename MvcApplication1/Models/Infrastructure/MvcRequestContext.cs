@@ -26,14 +26,12 @@ namespace MvcApplication1.Models
             _tempData = tempData;
         }
 
-        public virtual StringBuilder RenderPageContentItemVersion(ContentItemVersion<PageData> pageContentItemVersion, object model = null)
+        public virtual StringBuilder RenderPageContentItemVersion(string markupVirtualPath, object model = null)
         {
             _viewData.Model = model;
             using (var writer = new StringWriter())
             {
-                var versionFolderName = pageContentItemVersion.Type == ContentVersionType.Draft ? "Draft/" : "Published/";
-                var pageVirtualPath = "~/Views/" + versionFolderName + pageContentItemVersion.Content.ViewPath;
-                var viewResult = ViewEngines.Engines.FindPartialView(_controllerContext, pageVirtualPath);
+                var viewResult = ViewEngines.Engines.FindPartialView(_controllerContext, markupVirtualPath);
 
                 if (viewResult.View == null)
                     return null;
@@ -43,7 +41,7 @@ namespace MvcApplication1.Models
                 viewResult.ViewEngine.ReleaseView(_controllerContext, viewResult.View);
                 var result = writer.GetStringBuilder();
                 if (result == null)
-                    throw new ApplicationException(string.Format("Page file was not found by the path specified: '{0}'", pageVirtualPath));
+                    throw new ApplicationException(string.Format("Page file was not found by the path specified: '{0}'", markupVirtualPath));
                 return result;
             }
         }

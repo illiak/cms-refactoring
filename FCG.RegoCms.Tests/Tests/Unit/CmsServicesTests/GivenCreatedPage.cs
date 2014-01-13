@@ -11,7 +11,7 @@ using MvcApplication1.Models.Domain;
 using MvcApplication1.Models.Infrastructure;
 using NUnit.Framework;
 
-namespace MvcApplication1.Tests
+namespace FCG.RegoCms.Tests.CmsServicesTests
 {
     public class GivenCreatedPage : GivenCreatedPageContext
     {
@@ -20,7 +20,7 @@ namespace MvcApplication1.Tests
         {
             Assert.That(_page.DraftData.Name, Is.Not.Empty);
             Assert.That(_page.DraftData.Markup, Is.Not.Empty);
-            Assert.That(_page.DraftData.RoutePattern, Is.Not.Empty);
+            Assert.That(_page.DraftData.Route, Is.Not.Empty);
         }
 
         [Test]
@@ -36,7 +36,7 @@ namespace MvcApplication1.Tests
             _mvcRequestContextMock.HasDraftCookie = true;
             _cmsFrontendService.UpdateContentFiles();
 
-            var response = _cmsFrontendService.ProcessRequest(_page.DraftData.RoutePattern);
+            var response = _cmsFrontendService.ProcessRequest(_page.DraftData.Route);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.OK));
             Assert.That(response.Body, Is.Not.Empty);
@@ -46,7 +46,7 @@ namespace MvcApplication1.Tests
         public void ItCanBePublishedAndViewed()
         {
             _page.Publish();
-            var response = _cmsFrontendService.ProcessRequest(_page.PublishedData.RoutePattern);
+            var response = _cmsFrontendService.ProcessRequest(_page.PublishedData.Route);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.OK));
             Assert.That(response.Body, Is.Not.Empty);
@@ -65,7 +65,7 @@ namespace MvcApplication1.Tests
 
             _mvcRequestContextMock.HasAdminCookie = true;
             _mvcRequestContextMock.HasDraftCookie = true;
-            var response = _cmsFrontendService.ProcessRequest(_page.DraftData.RoutePattern);
+            var response = _cmsFrontendService.ProcessRequest(_page.DraftData.Route);
 
             Assert.That(response.Type, Is.EqualTo(ResponseType.PageNotFound));
         }
@@ -83,7 +83,7 @@ namespace MvcApplication1.Tests
             _page.Update(updateData);
 
             Assert.That(_page.LastVersion.Type, Is.EqualTo(ContentVersionType.Draft));
-            Assert.That(updateData.Route, Is.EqualTo(_page.DraftData.RoutePattern));
+            Assert.That(updateData.Route, Is.EqualTo(_page.DraftData.Route));
         }
     }
 

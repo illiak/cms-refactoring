@@ -10,33 +10,30 @@ namespace FCG.RegoCms
 {
     public class Page
     {
-        private readonly Guid                       _id;
         private readonly Action                     _contentChangedEvent;
-        private readonly ContentService             _contentService;
         private readonly Func<ContentRepository>    _repositoryFactory;
         private ContentItem<PageData>               _contentItem;
         private bool                                _initialized;
 
         public Page(
-            Guid id, 
             Action contentChangedEvent, 
-            ContentService contentService,
             Func<ContentRepository> repositoryFactory)
         {
-            _id = id;
             _contentChangedEvent = contentChangedEvent;
-            _contentService = contentService;
             _repositoryFactory = repositoryFactory;
             _initialized = false;
         }
 
-        public PageData DraftData { get { return _contentItem.Draft.Content; } }
-        public PageData PublishedData { get { return _contentItem.Published.Content; } }
+        public PageData DraftData { get { return _contentItem.Draft != null ? _contentItem.Draft.Content : null; } }
+        public PageData PublishedData { get { return _contentItem.Published != null ? _contentItem.Published.Content : null; } }
         public PageData LastData { get { return _contentItem.Last.Content; } }
+        public ContentItemVersion<PageData> PublishedVersion { get { return _contentItem.Published; } }
         public ContentItemVersion<PageData> LastVersion { get { return _contentItem.Last; } }
 
         public ValidationResult Validate(CreatePageData createPageData)
         {
+            Contract.Requires<NullReferenceException>(createPageData != null);
+
             var errors = new List<ValidationError>();
 
             if (string.IsNullOrEmpty(createPageData.Name) || createPageData.Name.Length > 40)
@@ -70,20 +67,23 @@ namespace FCG.RegoCms
 
         internal void Create(CreatePageData createPageData)
         {
+            Contract.Requires(createPageData != null);
             Contract.Assume(!_initialized, "This page instance is initialized already");
 
-            
+            var validationResult = Validate(createPageData);
+            if (!validationResult.IsValid)
+                throw new ApplicationException(validationResult.ValidationErrors.First().Message);
 
             var id = Guid.NewGuid();
-            var data = new PageData
+            var draftData = new PageData
             {
                 Id = id,
                 Markup = createPageData.Markup,
                 Name = createPageData.Name,
-                RoutePattern = createPageData.Route,
+                Route = createPageData.Route,
                 ViewPath = string.Format("{0}.cshtml", id)
             };
-            _contentItem = _contentService.Create(data);
+            _contentItem = new ContentItem<PageData>(x => x.Id, draftData);
 
             using (var repository = _repositoryFactory())
             {
@@ -91,7 +91,7 @@ namespace FCG.RegoCms
                 {
                     Id = _contentItem.Id,
                     DraftVersionId = _contentItem.Draft.Id,
-                    PublishedVersionId = _contentItem.Published.Id,
+                    PublishedVersionId = null,
                     Status = _contentItem.Status
                 });
                 if (_contentItem.Draft != null)
@@ -105,15 +105,45 @@ namespace FCG.RegoCms
             _contentChangedEvent();
         }
 
+        internal void Load(ContentItemData contentItemData, ViewVersionData draftVersionData, ViewVersionData publishedVersionData)
+        {
+            Contract.Requires(contentItemData != null);
+            Contract.Requires(draftVersionData != null || publishedVersionData != null);
+            Contract.Assume(!_initialized, "This page instance is initialized already");
+
+            var draftData = draftVersionData == null ? null : new PageData
+            {
+                Id = contentItemData.Id,
+                Markup = draftVersionData.Markup,
+                Name = draftVersionData.Name,
+                Route = draftVersionData.Route,
+                ViewPath = string.Format("{0}.cshtml", contentItemData.Id)
+            };
+            var publishedData = publishedVersionData == null ? null : new PageData
+            {
+                Id = contentItemData.Id,
+                Markup = publishedVersionData.Markup,
+                Name = publishedVersionData.Name,
+                Route = publishedVersionData.Route,
+                ViewPath = string.Format("{0}.cshtml", contentItemData.Id)
+            };
+
+            _contentItem = new ContentItem<PageData>(x => x.Id, draftData, publishedData);
+
+            _initialized = true;
+            _contentChangedEvent();
+        }
+
         public void Publish()
         {
             Contract.Assume(_initialized, "This page instance is not initialized yet");
 
             var oldContentItem = _contentItem;
             _contentItem = _contentItem.Publish();
+            
             using (var repository = _repositoryFactory())
             {
-                var contentItemData = repository.ContentItems.Single(x => x.Id == _id);
+                var contentItemData = repository.ContentItems.Single(x => x.Id == _contentItem.Id);
 
                 //delete draft from repository
                 contentItemData.DraftVersionId = null;
@@ -121,25 +151,42 @@ namespace FCG.RegoCms
                 repository.ViewVersions.Remove(draftVersionData);
                 
                 //update published version data
-                var publishedVersionData = repository.ViewVersions.Single(x => x.Id == _contentItem.Published.Id);
-                publishedVersionData.VersionType = _contentItem.Published.Type;
-                contentItemData.PublishedVersionId = publishedVersionData.Id;
+                contentItemData.PublishedVersionId = _contentItem.Published.Id;
+                repository.ViewVersions.Add(new ViewVersionData(_contentItem.Published));
 
                 repository.SaveChanges();
             }
             _contentChangedEvent();
         }
 
+        public void Update(UpdatePageData updateData)
+        {
+            Contract.Assume(_initialized, "This page instance is not initialized yet");
+
+            _contentItem = _contentItem.Update(x =>
+            {
+                x.Name = updateData.Name;
+                x.Route = updateData.Route;
+                x.Markup = updateData.Markup;
+            });
+
+            using (var repository = _repositoryFactory())
+            {
+                var contentItemData = repository.ContentItems.Single(x => x.Id == _contentItem.Id);
+
+                contentItemData.DraftVersionId = _contentItem.Draft.Id;
+                repository.ViewVersions.Add(new ViewVersionData(_contentItem.Draft));
+
+                repository.SaveChanges();
+            }
+            _contentChangedEvent();
+        }
 
         public void Delete()
         {
             Contract.Assume(_initialized, "This page instance is not initialized yet");
             _contentItem = _contentItem.Delete();
-        }
-
-        public void Update(UpdatePageData updateData)
-        {
-            throw new NotImplementedException();
+            _contentChangedEvent();
         }
     }
 }

@@ -168,13 +168,14 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\Domain\CmsBackendService.cs" />
+    <Compile Include="Models\Domain\CmsService.cs" />
     <Compile Include="Models\Domain\CmsFrontendService.cs" />
+    <Compile Include="Models\Domain\ContentItemVersion.cs" />
     <Compile Include="Models\Domain\ContentRepository.cs" />
     <Compile Include="Models\Domain\Data\CreatePageData.cs" />
     <Compile Include="Models\Domain\Data\PageData.cs" />
     <Compile Include="Models\Domain\Page.cs" />
-    <Compile Include="Models\Infrastructure\ContentRepository.cs" />
+    <Compile Include="Models\Domain\Data\ValidationResult.cs" />
     <Compile Include="Models\Domain\Language.cs" />
     <Compile Include="Models\Infrastructure\MvcApplicationContext.cs" />
     <Compile Include="Models\Infrastructure\SingletonLifetimeManager.cs" />
@@ -182,7 +183,7 @@
     <Compile Include="Models\Infrastructure\MvcRequestContext.cs" />
     <Compile Include="Models\Infrastructure\RandomHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Models\Domain\ContentService.cs" />
+    <Compile Include="Models\Domain\ContentItem.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\themes\base\images\ui-bg_flat_0_aaaaaa_40x100.png" />

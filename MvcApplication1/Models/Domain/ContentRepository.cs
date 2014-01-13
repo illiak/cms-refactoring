@@ -1,13 +1,17 @@
 using System;
 using System.Data.Entity;
+using System.Diagnostics.Contracts;
+using System.Linq;
 using MvcApplication1.Models;
 
 namespace FCG.RegoCms
 {
     public class ContentRepository : DbContext
     {
-        public DbSet<ContentItemData> ContentItems { get; private set; }
-        public DbSet<ViewVersionData> ViewVersions { get; private set; }
+        public ContentRepository() : base("name=Default") { }
+
+        public virtual IDbSet<ContentItemData> ContentItems { get; set; }
+        public virtual IDbSet<ViewVersionData> ViewVersions { get; set; }
     }
 
     public class ContentItemData
@@ -22,6 +26,8 @@ namespace FCG.RegoCms
     {
         public ViewVersionData(ContentItemVersion<PageData> pageVersion)
         {
+            Contract.Requires(pageVersion != null);
+
             Id = pageVersion.Id;
             VersionType = pageVersion.Type;
             ViewType = RazorViewType.Page;
@@ -29,10 +35,10 @@ namespace FCG.RegoCms
             CreatedOn = pageVersion.CreatedOn;
             ModifiedOn = pageVersion.ModifiedOn;
             DeletedOn = pageVersion.DeletedOn;
-            
-            ViewId = pageVersion.ContentId;
+
+            ContentId = pageVersion.ContentId;
             Name = pageVersion.Content.Name;
-            RoutePattern = pageVersion.Content.RoutePattern;
+            Route = pageVersion.Content.Route;
             LanguageCode = pageVersion.Content.LanguageCode;
             LayoutId = pageVersion.Content.LayoutId;
             Title = pageVersion.Content.Title;
@@ -41,6 +47,7 @@ namespace FCG.RegoCms
         }
 
         public Guid                 Id { get; set; }
+        public Guid                 ContentId { get; set; } //view id
         public ContentVersionType   VersionType { get; internal set; }
         public RazorViewType        ViewType { get; internal set; }
         public ContentStatus        Status { get; internal set; }
@@ -48,9 +55,8 @@ namespace FCG.RegoCms
         public DateTimeOffset?      ModifiedOn { get; set; }
         public DateTimeOffset?      DeletedOn { get; set; }
 
-        public Guid     ViewId { get; internal set; }
         public string   Name { get; internal set; }
-        public string   RoutePattern { get; internal set; }
+        public string   Route { get; internal set; }
         public string   LanguageCode { get; set; }
         public Guid?    LayoutId { get; internal set; }
         public string   Title { get; internal set; }

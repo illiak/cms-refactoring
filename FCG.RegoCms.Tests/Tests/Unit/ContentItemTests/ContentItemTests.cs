@@ -5,20 +5,13 @@ using MvcApplication1.Models.Infrastructure;
 using MvcApplication1.Tests;
 using NUnit.Framework;
 
-namespace FCG.RegoCms.Tests.ContentServiceTests
+namespace FCG.RegoCms.Tests.ContentItemTests
 {
-    public class GivenContentService : GivenContentServiceContext
+    public class ContentItemTests : ContentItemTestsContext
 	{
-        [Test]
-        public void CanRegisterNewContentType()
-        {
-            RegisterSampleContentType();
-        }
-
         [Test]
 		public void CanCreateNewContentItem()
         {
-            RegisterSampleContentType();
             var contentItem = CreateTestContentItem();
             Assert.That(contentItem, Is.Not.Null);
 		}
@@ -26,8 +19,6 @@ namespace FCG.RegoCms.Tests.ContentServiceTests
         [Test]
         public void CanCreateMultipleContentItems()
         {
-            RegisterSampleContentType();
-            
             Assert.DoesNotThrow(() =>
             {
                 var contentItems = CreateMultipleContentItems();
@@ -36,19 +27,13 @@ namespace FCG.RegoCms.Tests.ContentServiceTests
         }
 	}
 
-    public abstract class GivenContentServiceContext : BddUnitTestBase
+    public class ContentItemTestsContext : BddUnitTestBase
     {
-        protected ContentService _contentService;
-
-        protected override void Given()
-        {
-            _contentService = new ContentService();
-        }
-
         protected ContentItem<SampleItem> CreateTestContentItem(SampleItem sampleItem = null)
         {
             var data = sampleItem ?? CreateSampleItem();
-            return _contentService.Create(data);
+
+            return new ContentItem<SampleItem>(x => x.Id, draft: data);
         }
 
         protected IEnumerable<ContentItem<SampleItem>> CreateMultipleContentItems(int count = 10)
@@ -65,23 +50,18 @@ namespace FCG.RegoCms.Tests.ContentServiceTests
         {
             return new SampleItem
             {
-                Id = Guid.NewGuid(), 
-                Name = RandomHelper.GetRandomString(), 
+                Id = Guid.NewGuid(),
+                Name = RandomHelper.GetRandomString(),
                 Markup = RandomHelper.GetRandomString()
             };
         }
 
-        protected void RegisterSampleContentType()
+        protected class SampleItem
         {
-            _contentService.RegisterContentType<SampleItem>(name: "Sample Type", keySelector: x => x.Id);
+            public Guid Id;
+            public string Name;
+            public string Markup;
+            public string ViewPath;
         }
-
-        protected class SampleItem 
-		{
-			public Guid 	Id;
-			public string 	Name;
-			public string   Markup;
-			public string 	ViewPath;
-		}
     }
 }
